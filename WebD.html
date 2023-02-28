@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Web Design</title>
+	<link rel = "stylesheet" href = "styles1.css">
+
+</head>
+<body>
+	<div id="logo">
+       LE
+       <span1>LEARNING EXPERIENCED</span1>
+       <span> Professional</span>
+       <span> Teaching & Learning</span>
+
+  </div>
+
+     <!-- Image container -->
+  <div id="image1"></div>
+  <div id="image2"></div>
+  <div id="image3"></div>
+  <div id="image4"></div>
+  <div id="image5"></div>
+	<div class="navbar">
+    <a href="home.html">Home</a>
+    <div class="dropdown">
+      <button class="dropbtn">High School Mathematics
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="#">Algebra</a>
+        <a href="#">Geometry</a>
+        <a href="#">Algebra II</a>
+        <a href="#">Pre-Calculus</a>
+        <a href="#">AP Calculus AB</a>
+        <a href="#">AP Calculus BC</a>
+        <a href="#">AP Statistics</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="dropbtn">College Mathematics
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="#">Calculus I</a>
+        <a href="#">Calculus II</a>
+        <a href="#">Calculus III</a>
+        <a href="#">Statistics</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="dropbtn">Computer Science
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="#">Algorithms</a>
+        <a href="WebD.html">Web Design</a>
+        <a href="#">Game Design and Development</a>
+        <a href="#">Cryptography</a>
+      </div>
+    </div>
+    <a href="home.html">SAT Mathematics Prep</a>
+	</div>
+	<div class="grid-container"></div>
+
+	<script>
+		var grid = document.querySelector('.grid-container');
+		var colors = [];
+
+		for (var i=0; i<25; i++) {
+			var r = Math.floor(Math.random() * 256);
+			var g = Math.floor(Math.random() * 256);
+			var b = Math.floor(Math.random() * 256);
+			var color = "rgb(" + r + ", " + g + ", " + b + ")";
+			colors.push(color);
+
+			var item = document.createElement('div');
+			item.classList.add('grid-item');
+			item.style.backgroundColor = color;
+			grid.appendChild(item);
+		}
+
+		var gridItems = document.querySelectorAll('.grid-item');
+
+		gridItems.forEach(function(item) {
+			item.addEventListener('mouseenter', function() {
+				shuffleColors();
+				gridItems.forEach(function(item, index) {
+					item.style.backgroundColor = colors[index];
+				});
+			});
+		});
+
+		function shuffleColors() {
+			for (var i=colors.length-1; i>0; i--) {
+				var j = Math.floor(Math.random() * (i+1));
+				var temp = colors[i];
+				colors[i] = colors[j];
+				colors[j] = temp;
+			}
+		}
+	</script>
+
+</body>
+</html>
