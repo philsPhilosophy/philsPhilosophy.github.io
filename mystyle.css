@@ -154,3 +154,28 @@ a {
       *:hover {
         background-color: white;
       }
+      @media (max-width: 767px) {
+      	header {
+      		padding: 5px;
+      	}
+
+      	nav {
+      		flex-direction: column;
+      	}
+
+      	nav li {
+      		margin: 10px 0;
+      	}
+
+      	main {
+      		padding: 10px;
+      	}
+
+      	section {
+      		margin-bottom: 10px;
+      	}
+
+      	footer {
+      		padding: 5px;
+      	}
+      }  
