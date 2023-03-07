@@ -106,7 +106,7 @@ a {
         vertical-align: top;
         width: 200px; /* Account for the space taken up by the logo */
         height: 200px; /* Set the height of the image container */
-        background-image: url('Sky.jpg'); /* Replace with your image URL */
+        background-image: url('top.png'); /* Replace with your image URL */
         background-size: contain;
         background-position: center;
         background-repeat: no-repeat;
