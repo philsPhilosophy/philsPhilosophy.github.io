@@ -134,8 +134,8 @@ a {
 #image5 {
   display: inline-block;
   vertical-align: top;
-  width: 300px; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
+  width: 100%; /* Account for the space taken up by the logo */
+  height: 100%; /* Set the height of the image container */
   background-image: url('galileo.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
