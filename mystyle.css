@@ -72,13 +72,13 @@ a {
 
   font-family: sans-serif;
   font-weight: bold;
-  font-size: 100px;
+  font-size: 8vw;
   color: black;
   line-height: 1;
   }
 #logo span1 {
   display: block;
-  font-size: 12px;
+  font-size: 1vw;
   padding-bottom: 5px;
   }
 
@@ -92,7 +92,7 @@ a {
 #image1 {
   display: inline-block;
   vertical-align: top;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('sierpinskinew.gif'); /* Replace with your image URL */
   background-size: contain;
@@ -104,7 +104,7 @@ a {
 #image2 {
   display: inline-block;
   vertical-align: top;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('Sky.jpg'); /* Replace with your image URL */
   background-size: contain;
@@ -154,28 +154,3 @@ a {
 *:hover {
   background-color: white;
   }
-@media (max-width: 767px) {
-  header {
-    padding: 5px;
-      }
-
-  nav {
-    flex-direction: column;
-      	}
-
-  nav li {
-    margin: 10px 0;
-      	}
-
-  main {
-    padding: 10px;
-      	}
-
-  section {
-    margin-bottom: 10px;
-      	}
-
-  footer {
-    padding: 5px;
-      	}
-      }

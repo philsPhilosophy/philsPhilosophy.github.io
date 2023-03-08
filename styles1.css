@@ -85,13 +85,13 @@ html, body {
 
 #logo {
   display: inline-block;
-  margin: 5px;
+  margin: 10%;
   padding: 0px;
 
 
   font-family: sans-serif;
   font-weight: bold;
-  font-size: 100px;
+  font-size: 20%;
   color: black;
   line-height: 1;
 }
