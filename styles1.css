@@ -85,86 +85,81 @@ html, body {
 
 #logo {
   display: inline-block;
-  margin: 10%;
+  margin: 5px;
   padding: 0px;
 
 
   font-family: sans-serif;
   font-weight: bold;
-  font-size: 20%;
+  font-size: 8vw;
   color: black;
   line-height: 1;
-}
+  }
 #logo span1 {
   display: block;
-  font-size: 12px;
-  padding-bottom: 5px;
-}
+  font-size: 1vw;
+  padding-bottom: .5vw;
+  }
 
 #logo span {
   display: block;
-  font-size: 12px;
+  font-size: 1vw;
 
-}
+  }
 
-/* Set the style for the image container */
+      /* Set the style for the image container */
 #image1 {
   display: inline-block;
   vertical-align: top;
-  z-index: 1;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('sierpinskinew.gif'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 
-}
+  }
 
 #image2 {
   display: inline-block;
   vertical-align: top;
-  z-index: 1;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('Sky.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-}
+  }
 #image3 {
   display: inline-block;
   vertical-align: top;
-  z-index: 1;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('mandelbrot.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-}
+  }
 #image4 {
   display: inline-block;
   vertical-align: top;
-  z-index: 1;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('top.png'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-}
+  }
 #image5 {
   display: inline-block;
   vertical-align: top;
-  z-index: 1;
-  width: 15%; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('galileo.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-}
+  }
 .subheading {
   font-size: 24px;
   font-weight: bold;
