@@ -152,6 +152,7 @@ body {
 *:hover {
   background-color: white;
   }
+
   ul {
     list-style-type: none;
     padding: 0;
@@ -167,7 +168,7 @@ body {
   }
 
   li:before {
-    content: "+";
+    content: "*";
     position: absolute;
     left: 0;
     font-size: 24px; /* Increase the font size for the plus/minus sign */
@@ -181,7 +182,7 @@ body {
     display: none;
     margin: 0;
     padding: 0;
-    border: 1px solid black; /* Add a border around the sublist */
+    border: 2px solid black; /* Add a border around the sublist */
     padding-left: 20px; /* Indent the sublist */
   }
 
