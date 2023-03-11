@@ -162,6 +162,7 @@ body {
 
   li {
     position: relative;
+    border: 1px solid gray
     padding: 10px 20px; /* Increase the padding to add more space around the text */
     cursor: pointer;
     font-size: 20px; /* Increase the font size for each list item */
