@@ -112,7 +112,7 @@ body {
 #image3 {
   display: inline-block;
   vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('mandelbrot.jpg'); /* Replace with your image URL */
   background-size: contain;
@@ -122,7 +122,7 @@ body {
 #image4 {
   display: inline-block;
   vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('top.png'); /* Replace with your image URL */
   background-size: contain;
@@ -132,7 +132,7 @@ body {
 #image5 {
   display: inline-block;
   vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
+  width: 12vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('galileo.jpg'); /* Replace with your image URL */
   background-size: contain;
@@ -152,47 +152,32 @@ body {
 *:hover {
   background-color: white;
   }
-
   ul {
     list-style-type: none;
-    padding-left: 10px;
-    
-    margin: 10px 0; /* Add some margin to separate the list from other content */
+    padding: 0;
   }
-
   li {
     position: relative;
-    border: 1px solid gray
-    padding: 10px 20px; /* Increase the padding to add more space around the text */
+    padding-left: 20px;
     cursor: pointer;
-    font-size: 20px; /* Increase the font size for each list item */
   }
-
   li:before {
-    content: "*";
+    content: "+";
     position: absolute;
     left: 0;
-    font-size: 24px; /* Increase the font size for the plus/minus sign */
   }
-
   li.expanded:before {
     content: "-";
   }
-
   .sublist {
     display: none;
     margin: 0;
     padding: 0;
-    border: 2px solid black; /* Add a border around the sublist */
-    padding-left: 20px; /* Indent the sublist */
   }
-
   .sublist li {
-    padding: 10px 0; /* Add some space around the text */
+    padding-left: 40px;
     cursor: default;
-    font-size: 18px; /* Increase the font size for each sublist item */
   }
-
   .expanded .sublist {
     display: block;
   }
