@@ -156,7 +156,7 @@ body {
   ul {
     list-style-type: none;
     padding-left: 10px;
-    border: 1px solid gray; /* Add a border around the list */
+    
     margin: 10px 0; /* Add some margin to separate the list from other content */
   }
 
