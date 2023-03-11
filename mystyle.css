@@ -153,6 +153,7 @@ body {
   background-color: white;
   }
   ul {
+    position: center;
     list-style-type: none;
     padding: 0;
   }
