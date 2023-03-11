@@ -152,3 +152,32 @@ body {
 *:hover {
   background-color: white;
   }
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  li {
+    position: relative;
+    padding-left: 20px;
+    cursor: pointer;
+  }
+  li:before {
+    content: "+";
+    position: absolute;
+    left: 0;
+  }
+  li.expanded:before {
+    content: "-";
+  }
+  .sublist {
+    display: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sublist li {
+    padding-left: 40px;
+    cursor: default;
+  }
+  .expanded .sublist {
+    display: block;
+  }
