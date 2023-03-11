@@ -112,7 +112,7 @@ body {
 #image3 {
   display: inline-block;
   vertical-align: top;
-  width: 12vw; /* Account for the space taken up by the logo */
+  width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('mandelbrot.jpg'); /* Replace with your image URL */
   background-size: contain;
@@ -122,7 +122,7 @@ body {
 #image4 {
   display: inline-block;
   vertical-align: top;
-  width: 12vw; /* Account for the space taken up by the logo */
+  width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('top.png'); /* Replace with your image URL */
   background-size: contain;
@@ -132,7 +132,7 @@ body {
 #image5 {
   display: inline-block;
   vertical-align: top;
-  width: 12vw; /* Account for the space taken up by the logo */
+  width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
   background-image: url('galileo.jpg'); /* Replace with your image URL */
   background-size: contain;
