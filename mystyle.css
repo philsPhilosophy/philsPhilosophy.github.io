@@ -153,21 +153,24 @@ body {
   background-color: white;
   }
   ul {
-    position: center;
+    position: relative;
     list-style-type: none;
     padding: 0;
   }
   li {
     position: relative;
-    padding-left: 20px;
+    padding-left: 10px;
     cursor: pointer;
+    border: 1px solid black;
+    font-size: 24px;
   }
   li:before {
     content: "+";
-    position: absolute;
+
+    position: relative;
     left: 0;
   }
-  li.expanded:before {
+  li.expanded {
     content: "-";
   }
   .sublist {
@@ -176,7 +179,8 @@ body {
     padding: 0;
   }
   .sublist li {
-    padding-left: 40px;
+    border: 1px solid black;
+    padding-left: 10px;
     cursor: default;
   }
   .expanded .sublist {
