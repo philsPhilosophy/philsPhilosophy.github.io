@@ -189,13 +189,14 @@ body {
 
 
 #about-us {
-      background: url('blackboard.jpg') no-repeat center center fixed; 
-      -webkit-background-size: cover;
-      -moz-background-size: cover;
-      -o-background-size: cover;
-      background-size: cover;
-      /* rest of your styles... */
-  }
+    background-color: #FF69B4;
+    color: black;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    margin: auto;
+}
 
 #about-us h1,
 #about-us h3 {
