@@ -188,21 +188,15 @@ body {
   }
 
 
-  #about-us {
-      background: url('blackboard.jpg') no-repeat center center;
-      background-size: cover;
-      border-radius: 15px;
-      box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
-      max-width: 800px;
-      margin: auto;
-      overflow: hidden;  /* this ensures the image conforms to the border radius */
-  }
-
-  .content {
-      background-color: rgba(255, 105, 180, 0.8); /* hot pink with some transparency */
-      color: white;
-      padding: 30px;
-  }
+#about-us {
+    background-color: #FF69B4;
+    color: black;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    margin: auto;
+}
 
 #about-us h1,
 #about-us h3 {
