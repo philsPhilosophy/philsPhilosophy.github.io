@@ -196,6 +196,7 @@ body {
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
     max-width: 800px;
     margin: auto;
+    margin-bottom: 50px;
 }
 
 #about-us h1,
