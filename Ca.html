@@ -60,4 +60,53 @@
 
     <h1>Cellular Automata</h1>
     <label for="ruleNumber">Rule Number:</label>
-    <input
+    <input type="number" id="ruleNumber" name="ruleNumber" min="0" max="255">
+    <label for="steps">Number of Steps:</label>
+    <input type="number" id="steps" name="steps" min="1">
+    <button onclick="generateAutomata()">Generate</button>
+    <div id="automata">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        function generateAutomata() {
+            const ruleNumber = document.getElementById('ruleNumber').value;
+            const steps = document.getElementById('steps').value;
+
+            if (ruleNumber === '' || steps === '') {
+                alert('Please enter both rule number and number of steps.');
+                return;
+            }
+
+            const rule = parseInt(ruleNumber);
+            const numSteps = parseInt(steps);
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            // Calculate canvas size based on number of steps
+            canvas.width = numSteps * 2;
+            canvas.height = numSteps;
+
+            const automata = new Array(numSteps).fill(0).map(() => new Array(numSteps * 2).fill(0));
+            automata[0][numSteps] = 1;
+
+            for (let i = 1; i < numSteps; i++) {
+                for (let j = 1; j < numSteps * 2 - 1; j++) {
+                    const left = automata[i - 1][j - 1];
+                    const center = automata[i - 1][j];
+                    const right = automata[i - 1][j + 1];
+                    automata[i][j] = rule & (1 << (left * 4 + center * 2 + right)) ? 1 : 0;
+                }
+            }
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < numSteps; i++) {
+                for (let j = 0; j < numSteps * 2; j++) {
+                    context.fillStyle = automata[i][j] ? 'black' : 'white';
+                    context.fillRect(j, i, 1, 1);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
