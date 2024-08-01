@@ -5,49 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cellular Automata</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #rules {
+            margin-bottom: 20px;
+        }
         #automata {
             display: flex;
             justify-content: center;
-            margin-top: 20px;
         }
         canvas {
             border: 1px solid black;
+        }
+        .rule {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <h1>Cellular Automata</h1>
-    <div>
+    <div id="controls">
+        <div id="rules">
+            <h2>Rules</h2>
+            <div class="rule">
+                <label>000: <input type="checkbox" id="rule-000"></label>
+            </div>
+            <div class="rule">
+                <label>001: <input type="checkbox" id="rule-001"></label>
+            </div>
+            <div class="rule">
+                <label>010: <input type="checkbox" id="rule-010"></label>
+            </div>
+            <div class="rule">
+                <label>011: <input type="checkbox" id="rule-011"></label>
+            </div>
+            <div class="rule">
+                <label>100: <input type="checkbox" id="rule-100"></label>
+            </div>
+            <div class="rule">
+                <label>101: <input type="checkbox" id="rule-101"></label>
+            </div>
+            <div class="rule">
+                <label>110: <input type="checkbox" id="rule-110"></label>
+            </div>
+            <div class="rule">
+                <label>111: <input type="checkbox" id="rule-111"></label>
+            </div>
+        </div>
         <label for="steps">Number of Steps:</label>
         <input type="number" id="steps" name="steps" min="1">
         <button onclick="generateAutomata()">Generate</button>
-    </div>
-    <div id="rules">
-        <h2>Rules</h2>
-        <div>
-            <label>000: <input type="checkbox" id="rule-000"></label>
-        </div>
-        <div>
-            <label>001: <input type="checkbox" id="rule-001"></label>
-        </div>
-        <div>
-            <label>010: <input type="checkbox" id="rule-010"></label>
-        </div>
-        <div>
-            <label>011: <input type="checkbox" id="rule-011"></label>
-        </div>
-        <div>
-            <label>100: <input type="checkbox" id="rule-100"></label>
-        </div>
-        <div>
-            <label>101: <input type="checkbox" id="rule-101"></label>
-        </div>
-        <div>
-            <label>110: <input type="checkbox" id="rule-110"></label>
-        </div>
-        <div>
-            <label>111: <input type="checkbox" id="rule-111"></label>
-        </div>
     </div>
     <div id="automata">
         <canvas id="canvas"></canvas>
