@@ -88,8 +88,8 @@ body {
 .header-image {
   display: inline-block;
   vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
+  width: 13vw;
+  height: 200px;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;

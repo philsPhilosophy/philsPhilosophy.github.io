@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Secure Messaging</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <button id="generate-keys">Generate Key Pair</button>
     <pre id="keys-output"></pre>
     <form id="message-form">
-        <label>
-            Message:
-            <input id="message" type="text">
-        </label>
-        <label>
-            Recipient's Public Key:
-            <input id="recipient-public-key" type="text">
-        </label>
-        <button type="submit">Send</button>
+      <label>
+        Message:
+        <input id="message" type="text" />
+      </label>
+      <label>
+        Recipient's Public Key:
+        <input id="recipient-public-key" type="text" />
+      </label>
+      <button type="submit">Send</button>
     </form>
     <div id="messages"></div>
     <button id="decrypt">Decrypt Messages</button>
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
