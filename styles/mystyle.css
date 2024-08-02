@@ -1,6 +1,6 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background-color: hotpink
+  background-color: hotpink;
 }
 
 .navbar {
@@ -33,7 +33,8 @@ body {
   margin: 0;
 }
 
-.navbar a:hover, .dropdown:hover .dropbtn {
+.navbar a:hover,
+.dropdown:hover .dropbtn {
   background-color: hotpink;
 }
 
@@ -42,7 +43,7 @@ body {
   position: absolute;
   background-color: #f9f9f9;
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
@@ -67,160 +68,113 @@ body {
   margin: 5px;
   padding: 0px;
 
-
   font-family: sans-serif;
   font-weight: bold;
   font-size: 8vw;
   color: black;
   line-height: 1;
-  }
+}
 #logo span1 {
   display: block;
   font-size: 1vw;
-  padding-bottom: .5vw;
-  }
+  padding-bottom: 0.5vw;
+}
 
 #logo span {
   display: block;
   font-size: 1vw;
+}
 
-  }
-
-      /* Set the style for the image container */
-#image1 {
+.header-image {
   display: inline-block;
   vertical-align: top;
   width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('images/sierpinskinew.gif'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-
-  }
-
-#image2 {
-  display: inline-block;
-  vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
-  background-image: url('images/Sky.jpg'); /* Replace with your image URL */
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  }
-#image3 {
-  display: inline-block;
-  vertical-align: top;
-  width: 13vw; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
-  background-image: url('images/mandelbrot.jpg'); /* Replace with your image URL */
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  }
-#image4 {
-  display: inline-block;
-  vertical-align: top;
-  width: 14vw; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
-  background-image: url('images/top.png'); /* Replace with your image URL */
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  }
-#image5 {
-  display: inline-block;
-  vertical-align: top;
-  width: 14vw; /* Account for the space taken up by the logo */
-  height: 200px; /* Set the height of the image container */
-  background-image: url('images/galileo.jpg'); /* Replace with your image URL */
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  }
+}
 .subheading {
   font-size: 24px;
   font-weight: bold;
   text-align: center;
   margin-top: 10px;
-  }
+}
 * {
   transition: background-color 0.8s ease;
-  }
+}
 
 *:hover {
   background-color: white;
-  }
-  ul {
-    position: relative;
-    list-style-type: none;
-    padding: 0;
-  }
-  li {
-    position: relative;
-    padding-left: 10px;
-    cursor: pointer;
-    border: 1px solid black;
-    font-size: 24px;
-  }
-  li:before {
-    content: "+";
+}
+ul {
+  position: relative;
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  position: relative;
+  padding-left: 10px;
+  cursor: pointer;
+  border: 1px solid black;
+  font-size: 24px;
+}
+li:before {
+  content: "+";
 
-    position: relative;
-    left: 0;
-  }
-  li.expanded {
-    content: "-";
-  }
-  .sublist {
-    display: none;
-    margin: 0;
-    padding: 0;
-  }
-  .sublist li {
-    border: 1px solid black;
-    padding-left: 10px;
-    cursor: default;
-  }
-  .expanded .sublist {
-    display: block;
-  }
-
+  position: relative;
+  left: 0;
+}
+li.expanded {
+  content: "-";
+}
+.sublist {
+  display: none;
+  margin: 0;
+  padding: 0;
+}
+.sublist li {
+  border: 1px solid black;
+  padding-left: 10px;
+  cursor: default;
+}
+.expanded .sublist {
+  display: block;
+}
 
 #about-us {
-    background-color: #FF69B4;
-    color: black;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
-    max-width: 800px;
-    margin: auto;
-    margin-bottom: 50px;
+  background-color: #ff69b4;
+  color: black;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  margin: auto;
+  margin-bottom: 50px;
 }
 
 #about-us1 {
-    background-color: #FF69B4;
-    color: black;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
-    max-width: 800px;
-    margin: auto;
-    margin-bottom: 50px;
+  background-color: #ff69b4;
+  color: black;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  margin: auto;
+  margin-bottom: 50px;
 }
 
 #about-us h1,
 #about-us h3 {
-    text-align: center;
-    font-weight: bold;
-    border-bottom: 2px solid white;
-    padding-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid white;
+  padding-bottom: 10px;
 }
 
 #about-us p {
-    margin: 20px;
-    text-align: justify;
-    text-indent: 20px;
-    line-height: 1.6;
+  margin: 20px;
+  text-align: justify;
+  text-indent: 20px;
+  line-height: 1.6;
 }
