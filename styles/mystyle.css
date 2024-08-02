@@ -92,7 +92,7 @@ body {
   vertical-align: top;
   width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('sierpinskinew.gif'); /* Replace with your image URL */
+  background-image: url('images/sierpinskinew.gif'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -104,7 +104,7 @@ body {
   vertical-align: top;
   width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('Sky.jpg'); /* Replace with your image URL */
+  background-image: url('images/Sky.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -114,7 +114,7 @@ body {
   vertical-align: top;
   width: 13vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('mandelbrot.jpg'); /* Replace with your image URL */
+  background-image: url('images/mandelbrot.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -124,7 +124,7 @@ body {
   vertical-align: top;
   width: 14vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('top.png'); /* Replace with your image URL */
+  background-image: url('images/top.png'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -134,7 +134,7 @@ body {
   vertical-align: top;
   width: 14vw; /* Account for the space taken up by the logo */
   height: 200px; /* Set the height of the image container */
-  background-image: url('galileo.jpg'); /* Replace with your image URL */
+  background-image: url('images/galileo.jpg'); /* Replace with your image URL */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;

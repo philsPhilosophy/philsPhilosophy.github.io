@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Web Design</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../styles/styles1.css">
+  </head>
+  <body>
+    <!-- Page Header-->
+    <div>
+      <script src="../scripts/load.js"></script>
+      <div id="header-section"></div>
+      <div id="navbar-section"></div>
+    </div>
+
+    <div class="grid-container"></div>
+
+    <script>
+      var grid = document.querySelector(".grid-container");
+      var colors = [];
+
+      for (var i = 0; i < 25; i++) {
+        var r = Math.floor(Math.random() * 256);
+        var g = Math.floor(Math.random() * 256);
+        var b = Math.floor(Math.random() * 256);
+        var color = "rgb(" + r + ", " + g + ", " + b + ")";
+        colors.push(color);
+
+        var item = document.createElement("div");
+        item.classList.add("grid-item");
+        item.style.backgroundColor = color;
+        grid.appendChild(item);
+      }
+
+      var gridItems = document.querySelectorAll(".grid-item");
+
+      gridItems.forEach(function (item) {
+        item.addEventListener("mouseenter", function () {
+          shuffleColors();
+          gridItems.forEach(function (item, index) {
+            item.style.backgroundColor = colors[index];
+          });
+        });
+      });
+
+      function shuffleColors() {
+        for (var i = colors.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temp = colors[i];
+          colors[i] = colors[j];
+          colors[j] = temp;
+        }
+      }
+    </script>
+  </body>
+</html>
