@@ -1,3 +1,5 @@
+// Google gtag integration 
+
 window.dataLayer = window.dataLayer || [];
 
 function gtag() {
