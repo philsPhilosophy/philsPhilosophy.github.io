@@ -2,23 +2,33 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
   async function load_navbar() {
-    const element = document.getElementById("navbar-section");
-
     const navbar = await fetch("/elements/navbar.html");
     const text = await navbar.text();
 
-    element.innerHTML = text;
+    document.querySelectorAll("#navbar-section").forEach((elem) => {
+      elem.innerHTML = text;
+    });
   }
 
   async function load_header() {
-    const element = document.getElementById("header-section");
+    const header = await fetch("/elements/page_header.html");
+    const text = await header.text();
 
-    const navbar = await fetch("/elements/page_header.html");
-    const text = await navbar.text();
+    document.querySelectorAll("#header-section").forEach((elem) => {
+      elem.innerHTML = text;
+    });
+  }
 
-    element.innerHTML = text;
+  async function load_footer() {
+    const footer = await fetch("/elements/footer.html");
+    const text = await footer.text();
+
+    document.querySelectorAll("#footer-section").forEach((elem) => {
+      elem.innerHTML = text;
+    });
   }
 
   load_navbar();
   load_header();
+  load_footer();
 });
