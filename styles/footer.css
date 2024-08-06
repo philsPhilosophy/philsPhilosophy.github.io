@@ -1,43 +1,40 @@
 #footer {
-    margin: 0;
-    padding: 0;
-    margin-top: auto;
-    height: 20vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: hotpink;
-    border-top: 8px #ffffff solid;
-    gap: 20px;
+  margin: 0;
+  padding: 0;
+  margin-top: auto;
+  height: 20vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: hotpink;
+  border-top: 8px #ffffff solid;
+  gap: 20px;
 }
 
 #footer .contacts {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    font-weight: 400;
-    gap: 10%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  gap: 10%;
 }
 
 #footer .copy {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
 }
 
-
-.content {
-    border-bottom: 8px solid hotpink;
-    padding-bottom: auto;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
+main {
+  border-bottom: 8px solid hotpink;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5%;
 }
-
 
