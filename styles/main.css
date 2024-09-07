@@ -96,8 +96,8 @@ body {
 .header-image {
   width: auto; /* Keeps the image's aspect ratio */
   height: auto; /* Keeps the image's aspect ratio */
-  max-width: 100%; /* Ensures the image does not exceed the container's width */
-  max-height: 300px; /* Adjust this value as needed */
+  max-width: 100px; /* Ensures the image does not exceed the container's width */
+  max-height: 100px; /* Adjust this value as needed */
   display: inline-block;
   margin: 10px; /* Optional: Adds some spacing between images */
 }
