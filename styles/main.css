@@ -94,14 +94,14 @@ body {
 }
 
 .header-image {
+  width: auto; /* Keeps the image's aspect ratio */
+  height: auto; /* Keeps the image's aspect ratio */
+  max-width: 100%; /* Ensures the image does not exceed the container's width */
+  max-height: 300px; /* Adjust this value as needed */
   display: inline-block;
-  vertical-align: top;
-  width: 13vw;
-  height: 200px;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  margin: 10px; /* Optional: Adds some spacing between images */
 }
+
 .subheading {
   font-size: 24px;
   font-weight: bold;
