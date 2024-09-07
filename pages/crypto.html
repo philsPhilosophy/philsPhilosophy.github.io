@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Asymmetric Cryptography</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+      body {
+        background-color: hotpink;
+      }
+
+      p {
+        font-size: 1.2em;
+      }
+
+      .encryption-container, .decryption-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .encryption-container div, .decryption-container div {
+        margin-right: 20px;
+      }
+    </style>
+
+    <script>
+      // Function to compute (base^exponent) mod modulus efficiently
+      function modExp(base, exponent, modulus) {
+        if (modulus === 1) return 0;
+        let result = 1;
+        base = base % modulus;
+        while (exponent > 0) {
+          if (exponent % 2 === 1) { // If exponent is odd, multiply base with result
+            result = (result * base) % modulus;
+          }
+          exponent = Math.floor(exponent / 2); // Divide the exponent by 2
+          base = (base * base) % modulus; // Square the base
+        }
+        return result;
+      }
+
+      // Calculate A = 5^a mod 1736797
+      function calculateModExp() {
+        const a = parseInt(document.getElementById('inputA').value);
+        const p = 1736797;
+        const base = 5;
+        
+        if (isNaN(a) || a <= 0) {
+          alert("Please enter a valid positive integer.");
+          return;
+        }
+
+        const A = modExp(base, a, p);
+        document.getElementById('resultBoxA').value = A;
+      }
+
+      // Calculate B^S mod 1736797
+      function calculateModExpForInputs() {
+        const S = parseInt(document.getElementById('inputS').value);
+        const B = parseInt(document.getElementById('inputB').value);
+        const p = 1736797;
+        
+        if (isNaN(S) || S < 0 || isNaN(B) || B <= 0) {
+          alert("Please enter valid positive integers for both S and B.");
+          return;
+        }
+
+        const result = modExp(B, S, p);
+        document.getElementById('resultBoxB').value = result;
+      }
+
+      // Encryption function that converts text to numeric string using XOR
+      function encryptText() {
+        const key = parseInt(document.getElementById('encryptionKey').value);
+        const plaintext = document.getElementById('plaintextInput').value;
+
+        if (isNaN(key) || key <= 0 || !plaintext) {
+          alert("Please enter a valid secret key and some text to encrypt.");
+          return;
+        }
+
+        let encryptedText = '';
+        for (let i = 0; i < plaintext.length; i++) {
+          let encryptedChar = plaintext.charCodeAt(i) ^ key; // XOR operation
+          encryptedText += encryptedChar.toString() + ' '; // Convert to string and add space as a separator
+        }
+
+        document.getElementById('encryptedText').value = encryptedText.trim(); // Remove trailing space
+      }
+
+      // Decryption function that converts numeric string back to text using XOR
+      function decryptText() {
+        const key = parseInt(document.getElementById('decryptionKey').value);
+        const encryptedText = document.getElementById('encryptedInput').value;
+
+        if (isNaN(key) || key <= 0 || !encryptedText) {
+          alert("Please enter a valid secret key and the encrypted text to decrypt.");
+          return;
+        }
+
+        let decryptedText = '';
+        const encryptedNumbers = encryptedText.split(' '); // Split the string by spaces
+
+        for (let i = 0; i < encryptedNumbers.length; i++) {
+          let decryptedChar = String.fromCharCode(parseInt(encryptedNumbers[i]) ^ key); // XOR operation
+          decryptedText += decryptedChar; // Convert back to character
+        }
+
+        document.getElementById('decryptedText').value = decryptedText;
+      }
+    </script>
+  </head>
+
+  <body>
+    <main class="content">
+      <div id="about-us">
+        <h1>Introduction To Asymmetric Cryptography:</h1>
+        <p>
+          Asymmetric Cryptography allows for the following, seemingly impossible task, to be accomplished:
+        </p>
+        <p><b><i>Alice and Bob,
+            who have never met beforehand, wish to communicate in secret. However, every piece of information they exchange is observed by their adversary
+            Eve. How is it possible for Alice and Bob to share a key without making it available to Eve?</i></b>
+        </p>
+        <p>
+          First, we will show that it can be done.
+        </p>
+        <h2>
+          Materials:
+        </h2>
+
+        <ul>
+          <li style="font-size: 20px">-Pen and Paper</li>
+          <li style="font-size: 20px">-Laptop with internet access</li>
+          <li style="font-size: 20px">-Three people for each role: Alice, Bob, and Eve</li>
+        </ul>
+
+        <p>
+        <h2>
+          Step 1:
+        </h2>
+        Choose any two friends, and run through the following steps with each of you taking turns in the roles of Alice and Bob or Eve. You may even use one computer. Any information exchange or sharing of the screen between Alice and Bob must be shown or known to Eve.
+        </p>
+
+        <!-- Continue with the following content -->
+        <h2><b>Step 1:</b> Alice and Bob each Choose a Secret Number and Compute: <span>5<sup>a</sup> mod(1736797)</span></h2>
+        
+        <p>Alice, choose a secret number from 2- 1736797. Do not share this secret number with anyone, write it down, put the secret 
+          number in the textbox and click Mix, this will compute <span>5<sup>a</sup> mod(1736797)</span>. Alice, write down the mixed number. 
+          Refresh the webpage so the secret key cannot be seen by Bob or Eve. 
+        </p>
+        <p>
+          Bob, repeat the same process as Alice. Choose a secret 
+          number, write it down, and enter it into the textbox and click Mix. Bob, write the mixed number down. <b>And again, refresh the webpage
+          so that the secret key cannot be seen by Eve!</b>
+        </p>
+       
+        <input type="text" id="inputA">
+        <button onclick="calculateModExp()">Mix</button>
+        <br><br>
+        <p>Mixed Number</p>
+        <input type="text" id="resultBoxA" readonly>
+        <br><br>
+
+        <!-- Section for B^S mod 1736797 -->
+        <h2>Step 2: Alice & Bob Exchange Mixed Numbers and Compute a Shared Secret Key</h2>
+        <p>Alice should show or tell Bob the mixed number she received from step 1, and Bob should do the same. When they do, be sure that Eve is able 
+          to see and hear the mixed numbers from both. Now Alice and Bob will compute a shared secret key.
+        <p>Enter Here Your Secret Number</p>
+        <input type="text" id="inputS">
+        <br><br>
+        <p>Enter the Mixed Number You Received from Your Partner</p>
+        <input type="text" id="inputB">
+        <br><br>
+        <button onclick="calculateModExpForInputs()">Calculate Shared Secret Key Between Alice and Bob.</button>
+        <br><br>
+        <p>Shared Key Between Alice and Bob:</p>
+        <input type="text" id="resultBoxB" readonly>
+        <br><br>
+
+        <!-- Section for encryption using the shared secret key -->
+        <h2>Step 3: Encrypt a Message Using the Shared Secret Key</h2>
+        <div class="encryption-container">
+          <div>
+            <p>Enter the Shared Secret Key:</p>
+            <input type="text" id="encryptionKey">
+            <p>Enter the Text to Encrypt:</p>
+            <input type="text" id="plaintextInput">
+          </div>
+          <div>
+            <p>Encrypted Text (Numeric):</p>
+            <input type="text" id="encryptedText" readonly>
+            <br><br>
+            <button onclick="encryptText()">Encrypt Text</button>
+          </div>
+        </div>
+
+        <!-- Section for decryption using the shared secret key -->
+        <h2>Step 4: Decrypt the Encrypted Message Using the Shared Secret Key</h2>
+        <div class="decryption-container">
+          <div>
+            <p>Enter the Shared Secret Key:</p>
+            <input type="text" id="decryptionKey">
+            <p>Enter the Encrypted Text (Numeric):</p>
+            <input type="text" id="encryptedInput">
+          </div>
+          <div>
+            <p>Decrypted Text:</p>
+            <input type="text" id="decryptedText" readonly>
+            <br><br>
+            <button onclick="decryptText()">Decrypt Text</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="footer-section"></div>
+  </body>
+</html>
