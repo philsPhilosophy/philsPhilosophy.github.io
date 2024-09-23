@@ -13,21 +13,26 @@
         canvas {
             border: 1px solid black;
         }
-        .rule-row {
+        #rule-config {
             display: flex;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .rule-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 10px;
         }
         .rule-cell {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border: 1px solid black;
             margin: 2px;
-            background-color: white;
         }
         .rule-output {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border: 1px solid black;
             margin: 2px;
             cursor: pointer;
@@ -77,15 +82,15 @@
             ruleConfigDiv.innerHTML = ''; // Clear any existing content
 
             configurations.forEach((config, index) => {
-                const row = document.createElement('div');
-                row.classList.add('rule-row');
+                const column = document.createElement('div');
+                column.classList.add('rule-column');
 
                 // Create cells for the 3-cell configuration
                 config.forEach(cell => {
                     const div = document.createElement('div');
                     div.classList.add('rule-cell');
                     div.style.backgroundColor = cell === 1 ? 'black' : 'white';
-                    row.appendChild(div);
+                    column.appendChild(div);
                 });
 
                 // Create the clickable output cell
@@ -93,9 +98,9 @@
                 output.classList.add('rule-output');
                 output.id = `output-${index}`;
                 output.addEventListener('click', () => toggleOutput(index));
-                row.appendChild(output);
+                column.appendChild(output);
 
-                ruleConfigDiv.appendChild(row);
+                ruleConfigDiv.appendChild(column);
             });
         }
 
