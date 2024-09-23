@@ -22,7 +22,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-right: 10px;
+            margin-right: 20px;
         }
         .rule-row {
             display: flex;
@@ -43,6 +43,10 @@
         .rule-output.black {
             background-color: black;
         }
+        #rule-number-display {
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -53,8 +57,13 @@
         <!-- JavaScript will generate the 8 configurations here -->
     </div>
 
+    <!-- Display the calculated rule number -->
+    <div id="rule-number-display">
+        Rule Number: <span id="rule-number">0</span>
+    </div>
+
     <label for="steps">Number of Steps:</label>
-    <input type="number" id="steps" name="steps" min="1">
+    <input type="number" id="steps" name="steps" min="1" value="10">
     <button onclick="generateAutomata()">Generate</button>
 
     <div id="automata">
@@ -76,8 +85,18 @@
         let ruleArray = new Array(8).fill(0); // Start with all rules set to 0
 
         function toggleOutput(index) {
+            // Toggle the clicked cell between black (1) and white (0)
             ruleArray[index] = ruleArray[index] === 0 ? 1 : 0;
             document.getElementById(`output-${index}`).classList.toggle('black');
+
+            // Update the rule number after each toggle
+            updateRuleNumber();
+        }
+
+        function updateRuleNumber() {
+            // Convert the ruleArray to a decimal number (rule number)
+            const ruleNumber = parseInt(ruleArray.join(''), 2);
+            document.getElementById('rule-number').textContent = ruleNumber;
         }
 
         function displayRuleConfig() {
@@ -110,6 +129,9 @@
 
                 ruleConfigDiv.appendChild(ruleSet);
             });
+
+            // Set the initial rule number
+            updateRuleNumber();
         }
 
         function generateAutomata() {
@@ -124,9 +146,14 @@
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
 
-            // Calculate canvas size based on number of steps
-            canvas.width = numSteps * 2;
-            canvas.height = numSteps;
+            // Calculate dynamic cell size based on number of steps
+            const maxCanvasWidth = 600; // Maximum width of the canvas
+            const maxCanvasHeight = 600; // Maximum height of the canvas
+            const cellSize = Math.max(1, Math.floor(Math.min(maxCanvasWidth, maxCanvasHeight) / numSteps));
+
+            // Set canvas size dynamically based on the number of steps and cell size
+            canvas.width = numSteps * cellSize * 2;
+            canvas.height = numSteps * cellSize;
 
             const automata = new Array(numSteps).fill(0).map(() => new Array(numSteps * 2).fill(0));
             automata[0][numSteps] = 1;
@@ -145,7 +172,7 @@
             for (let i = 0; i < numSteps; i++) {
                 for (let j = 0; j < numSteps * 2; j++) {
                     context.fillStyle = automata[i][j] ? 'black' : 'white';
-                    context.fillRect(j, i, 1, 1);
+                    context.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                 }
             }
         }
