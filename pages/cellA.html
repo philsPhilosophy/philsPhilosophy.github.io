@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,30 +13,100 @@
         canvas {
             border: 1px solid black;
         }
+        .rule-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .rule-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid black;
+            margin: 2px;
+            background-color: white;
+        }
+        .rule-output {
+            width: 30px;
+            height: 30px;
+            border: 1px solid black;
+            margin: 2px;
+            cursor: pointer;
+        }
+        .rule-output.black {
+            background-color: black;
+        }
     </style>
 </head>
 <body>
     <h1>Cellular Automata</h1>
-    <label for="ruleNumber">Rule Number:</label>
-    <input type="number" id="ruleNumber" name="ruleNumber" min="0" max="255">
+    
+    <!-- Rule Configuration -->
+    <div id="rule-config">
+        <!-- JavaScript will generate the 8 configurations here -->
+    </div>
+    
     <label for="steps">Number of Steps:</label>
     <input type="number" id="steps" name="steps" min="1">
     <button onclick="generateAutomata()">Generate</button>
+    
     <div id="automata">
         <canvas id="canvas"></canvas>
     </div>
 
     <script>
+        const configurations = [
+            [1, 1, 1],
+            [1, 1, 0],
+            [1, 0, 1],
+            [1, 0, 0],
+            [0, 1, 1],
+            [0, 1, 0],
+            [0, 0, 1],
+            [0, 0, 0]
+        ];
+
+        let ruleArray = new Array(8).fill(0); // Start with all rules set to 0
+
+        function toggleOutput(index) {
+            ruleArray[index] = ruleArray[index] === 0 ? 1 : 0;
+            document.getElementById(`output-${index}`).classList.toggle('black');
+        }
+
+        function displayRuleConfig() {
+            const ruleConfigDiv = document.getElementById('rule-config');
+            ruleConfigDiv.innerHTML = ''; // Clear any existing content
+
+            configurations.forEach((config, index) => {
+                const row = document.createElement('div');
+                row.classList.add('rule-row');
+
+                // Create cells for the 3-cell configuration
+                config.forEach(cell => {
+                    const div = document.createElement('div');
+                    div.classList.add('rule-cell');
+                    div.style.backgroundColor = cell === 1 ? 'black' : 'white';
+                    row.appendChild(div);
+                });
+
+                // Create the clickable output cell
+                const output = document.createElement('div');
+                output.classList.add('rule-output');
+                output.id = `output-${index}`;
+                output.addEventListener('click', () => toggleOutput(index));
+                row.appendChild(output);
+
+                ruleConfigDiv.appendChild(row);
+            });
+        }
+
         function generateAutomata() {
-            const ruleNumber = document.getElementById('ruleNumber').value;
             const steps = document.getElementById('steps').value;
 
-            if (ruleNumber === '' || steps === '') {
-                alert('Please enter both rule number and number of steps.');
+            if (steps === '') {
+                alert('Please enter the number of steps.');
                 return;
             }
 
-            const rule = parseInt(ruleNumber);
             const numSteps = parseInt(steps);
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
@@ -54,7 +123,8 @@
                     const left = automata[i - 1][j - 1];
                     const center = automata[i - 1][j];
                     const right = automata[i - 1][j + 1];
-                    automata[i][j] = rule & (1 << (left * 4 + center * 2 + right)) ? 1 : 0;
+                    const binaryIndex = left * 4 + center * 2 + right;
+                    automata[i][j] = ruleArray[7 - binaryIndex]; // Apply the user's rule
                 }
             }
 
@@ -66,6 +136,9 @@
                 }
             }
         }
+
+        // Display the rule configuration on page load
+        displayRuleConfig();
     </script>
 </body>
 </html>
