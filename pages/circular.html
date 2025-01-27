@@ -15,6 +15,8 @@
         }
         canvas {
             border: 1px solid black;
+            display: block;
+            margin: 0 auto;
         }
         #rule-config {
             display: flex;
@@ -150,10 +152,11 @@
 
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
-            const radius = Math.min(canvas.width, canvas.height) / 2 - 10;
 
-            canvas.width = 800;
-            canvas.height = 800;
+            canvas.width = 1000; // Increased canvas width
+            canvas.height = 1000; // Increased canvas height
+
+            const radius = Math.min(canvas.width, canvas.height) / 2 - 10;
 
             const automata = new Array(steps).fill(0).map(() => new Array(sectors).fill(0));
             automata[0][Math.floor(sectors / 2)] = 1;
@@ -207,10 +210,10 @@
         function downloadPDF() {
             const element = document.body;
             const opt = {
-                margin: 1,
+                margin: 0.5,
                 filename: 'cellular_automata.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 3 }, // Increased scale for higher quality
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
             html2pdf().set(opt).from(element).save();
