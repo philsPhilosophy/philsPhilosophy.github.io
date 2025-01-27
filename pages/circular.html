@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annular Cellular Automata</title>
     <style>
+        body {
+            position: relative;
+        }
         #automata {
             display: flex;
             justify-content: center;
@@ -48,22 +51,25 @@
             margin-top: 10px;
         }
         #download-btn {
-            display: block;
-            margin: 20px auto;
+            position: absolute;
+            top: 10px;
+            right: 10px;
             padding: 10px 20px;
             font-size: 16px;
-            background-color: #4CAF50;
+            background-color: black;
             color: white;
             border: none;
             cursor: pointer;
             border-radius: 5px;
         }
         #download-btn:hover {
-            background-color: #45a049;
+            background-color: #333;
         }
     </style>
 </head>
 <body>
+    <button id="download-btn" onclick="downloadPDF()">Download as PDF</button>
+
     <h1>Annular Cellular Automata</h1>
 
     <div id="rule-config"></div>
@@ -75,8 +81,6 @@
     <label for="sectors">Number of Sectors:</label>
     <input type="number" id="sectors" name="sectors" min="3" value="12">
     <button onclick="generateAutomata()">Generate</button>
-
-    <button id="download-btn" onclick="downloadPDF()">Download as PDF</button>
 
     <div id="automata">
         <canvas id="canvas"></canvas>
