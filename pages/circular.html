@@ -196,4 +196,47 @@
             for (let i = 0; i < steps; i++) {
                 for (let j = 0; j < sectors; j++) {
                     const color = automata[i][j] ? blackCellColor : whiteCellColor;
-                    const startAngle =
+                    const startAngle = j * angleStep;
+                    const endAngle = startAngle + angleStep;
+                    const innerRadius = i * stepRadius;
+                    const outerRadius = innerRadius + stepRadius;
+
+                    context.beginPath();
+                    context.moveTo(
+                        canvas.width / 2 + innerRadius * Math.cos(startAngle),
+                        canvas.height / 2 + innerRadius * Math.sin(startAngle)
+                    );
+                    context.arc(
+                        canvas.width / 2,
+                        canvas.height / 2,
+                        outerRadius,
+                        startAngle,
+                        endAngle
+                    );
+                    context.lineTo(
+                        canvas.width / 2 + innerRadius * Math.cos(endAngle),
+                        canvas.height / 2 + innerRadius * Math.sin(endAngle)
+                    );
+                    context.closePath();
+                    context.fillStyle = color;
+                    context.fill();
+                }
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.body;
+            const opt = {
+                margin: 0.5,
+                filename: 'cellular_automata.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 3 }, 
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        displayRuleConfig();
+    </script>
+</body>
+</html>
