@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annular Cellular Automata</title>
+    <style>
+        #automata {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        #rule-config {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .rule-set {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .rule-row {
+            display: flex;
+        }
+        .rule-cell {
+            width: 20px;
+            height: 20px;
+            border: 1px solid black;
+            margin: 1px;
+        }
+        .rule-output {
+            width: 20px;
+            height: 20px;
+            border: 1px solid black;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        .rule-output.black {
+            background-color: black;
+        }
+        #rule-number-display {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Annular Cellular Automata</h1>
+
+    <div id="rule-config"></div>
+    <div id="rule-number-display">
+        Rule Number: <span id="rule-number">0</span>
+    </div>
+    <label for="steps">Number of Steps:</label>
+    <input type="number" id="steps" name="steps" min="1" value="10">
+    <label for="sectors">Number of Sectors:</label>
+    <input type="number" id="sectors" name="sectors" min="3" value="12">
+    <button onclick="generateAutomata()">Generate</button>
+
+    <div id="automata">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const configurations = [
+            [1, 1, 1],
+            [1, 1, 0],
+            [1, 0, 1],
+            [1, 0, 0],
+            [0, 1, 1],
+            [0, 1, 0],
+            [0, 0, 1],
+            [0, 0, 0]
+        ];
+
+        let ruleArray = new Array(8).fill(0);
+
+        function toggleOutput(index) {
+            ruleArray[index] = ruleArray[index] === 0 ? 1 : 0;
+            document.getElementById(`output-${index}`).classList.toggle('black');
+            updateRuleNumber();
+        }
+
+        function updateRuleNumber() {
+            const ruleNumber = parseInt(ruleArray.join(''), 2);
+            document.getElementById('rule-number').textContent = ruleNumber;
+        }
+
+        function displayRuleConfig() {
+            const ruleConfigDiv = document.getElementById('rule-config');
+            ruleConfigDiv.innerHTML = '';
+
+            configurations.forEach((config, index) => {
+                const ruleSet = document.createElement('div');
+                ruleSet.classList.add('rule-set');
+
+                const ruleRow = document.createElement('div');
+                ruleRow.classList.add('rule-row');
+
+                config.forEach(cell => {
+                    const div = document.createElement('div');
+                    div.classList.add('rule-cell');
+                    div.style.backgroundColor = cell === 1 ? 'black' : 'white';
+                    ruleRow.appendChild(div);
+                });
+
+                ruleSet.appendChild(ruleRow);
+
+                const output = document.createElement('div');
+                output.classList.add('rule-output');
+                output.id = `output-${index}`;
+                output.addEventListener('click', () => toggleOutput(index));
+                ruleSet.appendChild(output);
+
+                ruleConfigDiv.appendChild(ruleSet);
+            });
+
+            updateRuleNumber();
+        }
+
+        function generateAutomata() {
+            const steps = parseInt(document.getElementById('steps').value);
+            const sectors = parseInt(document.getElementById('sectors').value);
+
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            const radius = Math.min(canvas.width, canvas.height) / 2 - 10;
+
+            canvas.width = 800;
+            canvas.height = 800;
+
+            const automata = new Array(steps).fill(0).map(() => new Array(sectors).fill(0));
+            automata[0][Math.floor(sectors / 2)] = 1;
+
+            for (let i = 1; i < steps; i++) {
+                for (let j = 0; j < sectors; j++) {
+                    const left = automata[i - 1][(j - 1 + sectors) % sectors];
+                    const center = automata[i - 1][j];
+                    const right = automata[i - 1][(j + 1) % sectors];
+                    const binaryIndex = left * 4 + center * 2 + right;
+                    automata[i][j] = ruleArray[7 - binaryIndex];
+                }
+            }
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            const stepRadius = radius / steps;
+            const angleStep = (2 * Math.PI) / sectors;
+
+            for (let i = 0; i < steps; i++) {
+                for (let j = 0; j < sectors; j++) {
+                    const color = automata[i][j] ? 'black' : 'white';
+                    const startAngle = j * angleStep;
+                    const endAngle = startAngle + angleStep;
+                    const innerRadius = i * stepRadius;
+                    const outerRadius = innerRadius + stepRadius;
+
+                    context.beginPath();
+                    context.moveTo(
+                        canvas.width / 2 + innerRadius * Math.cos(startAngle),
+                        canvas.height / 2 + innerRadius * Math.sin(startAngle)
+                    );
+                    context.arc(
+                        canvas.width / 2,
+                        canvas.height / 2,
+                        outerRadius,
+                        startAngle,
+                        endAngle
+                    );
+                    context.lineTo(
+                        canvas.width / 2 + innerRadius * Math.cos(endAngle),
+                        canvas.height / 2 + innerRadius * Math.sin(endAngle)
+                    );
+                    context.closePath();
+                    context.fillStyle = color;
+                    context.fill();
+                }
+            }
+        }
+
+        displayRuleConfig();
+    </script>
+</body>
+</html>
