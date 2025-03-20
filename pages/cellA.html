@@ -47,6 +47,10 @@
             text-align: center;
             margin-top: 10px;
         }
+        #controls {
+            text-align: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -62,9 +66,18 @@
         Rule Number: <span id="rule-number">0</span>
     </div>
 
-    <label for="steps">Number of Steps:</label>
-    <input type="number" id="steps" name="steps" min="1" value="10">
-    <button onclick="generateAutomata()">Generate</button>
+    <div id="controls">
+        <label for="steps">Number of Steps:</label>
+        <input type="number" id="steps" name="steps" min="1" value="10">
+        
+        <label for="live-color">Live Cell Color:</label>
+        <input type="color" id="live-color" value="#000000">
+        
+        <label for="dead-color">Dead Cell Color:</label>
+        <input type="color" id="dead-color" value="#FFFFFF">
+        
+        <button onclick="generateAutomata()">Generate</button>
+    </div>
 
     <div id="automata">
         <canvas id="canvas"></canvas>
@@ -85,29 +98,24 @@
         let ruleArray = new Array(8).fill(0); // Start with all rules set to 0
 
         function toggleOutput(index) {
-            // Toggle the clicked cell between black (1) and white (0)
             ruleArray[index] = ruleArray[index] === 0 ? 1 : 0;
             document.getElementById(`output-${index}`).classList.toggle('black');
-
-            // Update the rule number after each toggle
             updateRuleNumber();
         }
 
         function updateRuleNumber() {
-            // Convert the ruleArray to a decimal number (rule number)
             const ruleNumber = parseInt(ruleArray.join(''), 2);
             document.getElementById('rule-number').textContent = ruleNumber;
         }
 
         function displayRuleConfig() {
             const ruleConfigDiv = document.getElementById('rule-config');
-            ruleConfigDiv.innerHTML = ''; // Clear any existing content
+            ruleConfigDiv.innerHTML = '';
 
             configurations.forEach((config, index) => {
                 const ruleSet = document.createElement('div');
                 ruleSet.classList.add('rule-set');
 
-                // Create the 3-cell configuration in a row
                 const ruleRow = document.createElement('div');
                 ruleRow.classList.add('rule-row');
 
@@ -120,7 +128,6 @@
 
                 ruleSet.appendChild(ruleRow);
 
-                // Create the clickable output cell, placed below the middle cell
                 const output = document.createElement('div');
                 output.classList.add('rule-output');
                 output.id = `output-${index}`;
@@ -130,12 +137,13 @@
                 ruleConfigDiv.appendChild(ruleSet);
             });
 
-            // Set the initial rule number
             updateRuleNumber();
         }
 
         function generateAutomata() {
             const steps = document.getElementById('steps').value;
+            const liveColor = document.getElementById('live-color').value;
+            const deadColor = document.getElementById('dead-color').value;
 
             if (steps === '') {
                 alert('Please enter the number of steps.');
@@ -146,12 +154,10 @@
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
 
-            // Calculate dynamic cell size based on number of steps
-            const maxCanvasWidth = 600; // Maximum width of the canvas
-            const maxCanvasHeight = 600; // Maximum height of the canvas
+            const maxCanvasWidth = 600;
+            const maxCanvasHeight = 600;
             const cellSize = Math.max(1, Math.floor(Math.min(maxCanvasWidth, maxCanvasHeight) / numSteps));
 
-            // Set canvas size dynamically based on the number of steps and cell size
             canvas.width = numSteps * cellSize * 2;
             canvas.height = numSteps * cellSize;
 
@@ -164,20 +170,19 @@
                     const center = automata[i - 1][j];
                     const right = automata[i - 1][j + 1];
                     const binaryIndex = left * 4 + center * 2 + right;
-                    automata[i][j] = ruleArray[7 - binaryIndex]; // Apply the user's rule
+                    automata[i][j] = ruleArray[7 - binaryIndex];
                 }
             }
 
             context.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < numSteps; i++) {
                 for (let j = 0; j < numSteps * 2; j++) {
-                    context.fillStyle = automata[i][j] ? 'black' : 'white';
+                    context.fillStyle = automata[i][j] ? liveColor : deadColor;
                     context.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                 }
             }
         }
 
-        // Display the rule configuration on page load
         displayRuleConfig();
     </script>
 </body>
