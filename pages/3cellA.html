@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3-State Cellular Automata</title>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    #automata {
+      display: flex; justify-content: center; margin-top: 20px;
+    }
+    canvas { border: 1px solid #000; }
+    #rule-config {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 12px;
+    }
+    .rule-set {
+      display: flex; flex-direction: column; align-items: center;
+      border: 1px solid #ccc; padding: 6px; border-radius: 6px; width: 92px;
+    }
+    .rule-row { display: flex; }
+    .rule-cell, .rule-output {
+      width: 20px; height: 20px; border: 1px solid #000; margin: 1px;
+      box-sizing: border-box;
+    }
+    .rule-output { margin-top: 6px; cursor: pointer; width: 66px; }
+    #rule-number-display, #controls { text-align: center; margin: 10px 0; }
+    #controls label { margin: 0 6px; }
+    .btn { margin: 0 4px; padding: 6px 10px; cursor: pointer; }
+    .row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center">3-State Cellular Automata</h1>
+
+  <!-- Rule Configuration (27 neighborhoods) -->
+  <div id="rule-config"></div>
+
+  <!-- Calculated rule number (base-3 → decimal) -->
+  <div id="rule-number-display">
+    Rule Number (ternary → decimal): <span id="rule-number">0</span>
+  </div>
+
+  <div id="controls">
+    <div class="row" style="margin-bottom:8px;">
+      <label for="steps">Steps:</label>
+      <input type="number" id="steps" min="1" value="60" style="width:80px;">
+      <label for="width">Width (cells):</label>
+      <input type="number" id="width" min="3" value="120" style="width:90px;">
+      <label for="seed-state">Seed State:</label>
+      <select id="seed-state">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="0">0</option>
+      </select>
+      <button class="btn" id="btn-generate">Generate</button>
+    </div>
+
+    <div class="row" style="margin-bottom:8px;">
+      <label for="state0-color">State 0 Color:</label>
+      <input type="color" id="state0-color" value="#FFFFFF">
+      <label for="state1-color">State 1 Color:</label>
+      <input type="color" id="state1-color" value="#000000">
+      <label for="state2-color">State 2 Color:</label>
+      <input type="color" id="state2-color" value="#FF0000">
+    </div>
+
+    <div class="row">
+      <button class="btn" id="btn-random">Randomize Rule</button>
+      <button class="btn" id="btn-clear">Clear Rule</button>
+      <button class="btn" id="btn-classic">Load Classic (Rule-like)</button>
+    </div>
+  </div>
+
+  <div id="automata">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+    /*** --- 3-State Automaton Core --- ***/
+
+    // There are 3^3 = 27 neighborhood configurations.
+    // We mirror the classic binary ordering (from 222 down to 000).
+    const configurations = [];
+    for (let a = 2; a >= 0; a--) {
+      for (let b = 2; b >= 0; b--) {
+        for (let c = 2; c >= 0; c--) {
+          configurations.push([a, b, c]);
+        }
+      }
+    }
+    // ruleArray[i] ∈ {0,1,2}; length 27
+    let ruleArray = new Array(27).fill(0);
+
+    // Color map from state -> hex (dynamic via inputs)
+    function getPalette() {
+      return [
+        document.getElementById('state0-color').value,
+        document.getElementById('state1-color').value,
+        document.getElementById('state2-color').value
+      ];
+    }
+
+    function stateToColor(state) { return getPalette()[state]; }
+
+    // Click to cycle output
+    function toggleOutput(index) {
+      ruleArray[index] = (ruleArray[index] + 1) % 3;
+      const out = document.getElementById(`output-${index}`);
+      out.style.backgroundColor = stateToColor(ruleArray[index]);
+      updateRuleNumber();
+    }
+
+    // Base-3 → decimal display of the rule vector (most-significant digit at index 0)
+    function updateRuleNumber() {
+      const ruleNumber = ruleArray.reduce((acc, digit) => acc * 3 + digit, 0);
+      document.getElementById('rule-number').textContent = ruleNumber.toString(10);
+    }
+
+    function displayRuleConfig() {
+      const ruleConfigDiv = document.getElementById('rule-config');
+      ruleConfigDiv.innerHTML = '';
+
+      configurations.forEach((config, index) => {
+        const ruleSet = document.createElement('div');
+        ruleSet.classList.add('rule-set');
+
+        const ruleRow = document.createElement('div');
+        ruleRow.classList.add('rule-row');
+
+        config.forEach(cellState => {
+          const div = document.createElement('div');
+          div.classList.add('rule-cell');
+          div.style.backgroundColor = stateToColor(cellState);
+          ruleRow.appendChild(div);
+        });
+
+        ruleSet.appendChild(ruleRow);
+
+        const output = document.createElement('div');
+        output.classList.add('rule-output');
+        output.id = `output-${index}`;
+        output.title = 'Click to cycle 0→1→2';
+        output.style.backgroundColor = stateToColor(ruleArray[index]);
+        output.addEventListener('click', () => toggleOutput(index));
+        ruleSet.appendChild(output);
+
+        ruleConfigDiv.appendChild(ruleSet);
+      });
+
+      updateRuleNumber();
+    }
+
+    // If colors change, refresh config swatches & outputs
+    function refreshConfigColors() {
+      configurations.forEach((config, index) => {
+        const swatchRow = document.querySelectorAll('.rule-set .rule-row')[index];
+        const cells = swatchRow.querySelectorAll('.rule-cell');
+        for (let i = 0; i < 3; i++) {
+          cells[i].style.backgroundColor = stateToColor(config[i]);
+        }
+        const out = document.getElementById(`output-${index}`);
+        out.style.backgroundColor = stateToColor(ruleArray[index]);
+      });
+    }
+
+    // Generate the automaton image based on current ruleArray and colors
+    function generateAutomata() {
+      const steps = parseInt(document.getElementById('steps').value, 10);
+      const widthCells = parseInt(document.getElementById('width').value, 10);
+      const seedState = parseInt(document.getElementById('seed-state').value, 10);
+      if (!Number.isFinite(steps) || steps < 1) {
+        alert('Please enter a valid number of steps (≥1).'); return;
+      }
+      if (!Number.isFinite(widthCells) || widthCells < 3) {
+        alert('Please enter a valid width (≥3).'); return;
+      }
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const maxCanvas = 700;
+      const cellSize = Math.max(1, Math.floor(Math.min(maxCanvas / steps, maxCanvas / widthCells)));
+
+      canvas.width = widthCells * cellSize;
+      canvas.height = steps * cellSize;
+
+      // Build grid [rows][cols], seed center with chosen state
+      const rows = steps, cols = widthCells;
+      const grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
+      const mid = Math.floor(cols / 2);
+      grid[0][mid] = seedState;
+
+      // Evolve
+      for (let r = 1; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          // Neighborhood with fixed zero at edges (you can wrap by uncommenting below)
+          const left  = c > 0        ? grid[r - 1][c - 1] : 0;
+          const center= grid[r - 1][c];
+          const right = c < cols - 1 ? grid[r - 1][c + 1] : 0;
+
+          // If you prefer wrapping boundaries, use:
+          // const left  = grid[r-1][(c - 1 + cols) % cols];
+          // const center= grid[r-1][c];
+          // const right = grid[r-1][(c + 1) % cols];
+
+          // Index in [0..26] for (left,center,right) in lexicographic order 222..000
+          const ternaryIndex = left * 9 + center * 3 + right;   // 0..26 (000..222)
+          const lookupIndex = 26 - ternaryIndex;                // reverse to 222..000
+          grid[r][c] = ruleArray[lookupIndex];
+        }
+      }
+
+      // Draw
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const palette = getPalette();
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          ctx.fillStyle = palette[grid[r][c]];
+          ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    /*** --- Helpers / Presets --- ***/
+    function randomizeRule() {
+      ruleArray = ruleArray.map(() => Math.floor(Math.random() * 3));
+      // Update outputs
+      ruleArray.forEach((_, i) => {
+        const out = document.getElementById(`output-${i}`);
+        out.style.backgroundColor = stateToColor(ruleArray[i]);
+      });
+      updateRuleNumber();
+    }
+
+    function clearRule() {
+      ruleArray = new Array(27).fill(0);
+      ruleArray.forEach((_, i) => {
+        const out = document.getElementById(`output-${i}`);
+        out.style.backgroundColor = stateToColor(0);
+      });
+      updateRuleNumber();
+    }
+
+    // A simple “classic-like” preset: outputs = center (identity rule)
+    function loadClassicIdentity() {
+      // If the center is s, output s
+      // For each (L,C,R), output = C → in our reversed order we must compute per config
+      configurations.forEach((cfg, idx) => {
+        ruleArray[idx] = cfg[1];
+      });
+      ruleArray.forEach((_, i) => {
+        const out = document.getElementById(`output-${i}`);
+        out.style.backgroundColor = stateToColor(ruleArray[i]);
+      });
+      updateRuleNumber();
+    }
+
+    /*** --- Wire up UI --- ***/
+    document.getElementById('btn-generate').addEventListener('click', generateAutomata);
+    document.getElementById('btn-random').addEventListener('click', randomizeRule);
+    document.getElementById('btn-clear').addEventListener('click', clearRule);
+    document.getElementById('btn-classic').addEventListener('click', loadClassicIdentity);
+
+    // Repaint config swatches when colors change
+    ['state0-color','state1-color','state2-color'].forEach(id => {
+      document.getElementById(id).addEventListener('input', refreshConfigColors);
+    });
+
+    // Initial render
+    displayRuleConfig();
+  </script>
+</body>
+</html>
