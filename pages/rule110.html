@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Rule 110 — Gliders & Collisions</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  button, select, input[type=range] { padding:6px 10px; border-radius:8px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  #canvas { border:1px solid #bbb; display:block; image-rendering: pixelated; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0; }
+  .note { color:#444; font-size:.95rem; line-height:1.3; }
+  .hint { color:#666; font-size:.9rem; }
+  .pill { padding:2px 8px; border-radius:999px; border:1px solid #ddd; }
+</style>
+</head>
+<body>
+
+<h1>Rule 110 — gliders, ether, and collisions</h1>
+
+<div class="controls">
+  <button id="runBtn">Run</button>
+  <button id="stepBtn">Step</button>
+  <button id="pauseBtn" disabled>Pause</button>
+  <label class="pill">Speed <input id="speed" type="range" min="1" max="60" value="30" /></label>
+  <label class="pill">Cell Size <input id="cellSize" type="range" min="2" max="8" value="3" /></label>
+  <button id="clearBtn">Clear</button>
+  <button id="etherBtn">Fill Ether</button>
+  <span class="hint">Click on the canvas to toggle cells before running.</span>
+</div>
+
+<div class="row">
+  <label>Stamp at cursor:
+    <select id="stampSelect">
+      <option value="none">— choose —</option>
+      <option value="ether14">Ether (14-bit segment)</option>
+      <option value="rightMover">Right-mover core (0001110111)</option>
+      <option value="leftMover">Left-mover core (1001111)</option>
+      <option value="stationary">Stationary (111)</option>
+    </select>
+  </label>
+  <button id="toggleStamp">Stamp mode: OFF</button>
+</div>
+
+<div class="row">
+  <button id="demoPass">Demo: pass-through</button>
+  <button id="demoStationary">Demo: make stationary</button>
+  <button id="demoStream">Demo: glider stream</button>
+  <span class="note">Demos seed ether + place movers at suggested spacing for a visible interaction.</span>
+</div>
+
+<canvas id="canvas" width="900" height="600"></canvas>
+
+<p class="note">
+  <strong>Patterns used.</strong> Ether (period-14) <code>00010011011111</code>. Right-mover core <code>0001110111</code>.
+  Left-mover core <code>1001111</code>. Stationary core <code>111</code>. These behave as gliders when embedded with correct phasing within the ether background and with suitable spacing; we provide simple presets so you can see them traveling and colliding. For a full catalog, see Martínez et&nbsp;al.; for universality via cyclic tag systems, see Cook (2004). 
+</p>
+
+<script>
+(() => {
+  // --- Config ---
+  const W = 400;            // number of cells horizontally
+  const H = 400;            // number of generations kept on screen
+  const rule = 110;         // Rule 110
+  const ether14 = "00010011011111".split("").map(Number); // Wikipedia ether pattern
+  const rightMoverCore = "0001110111".split("").map(Number);
+  const leftMoverCore  = "1001111".split("").map(Number);
+  const stationaryCore = "111".split("").map(Number);
+
+  // --- State ---
+  let grid = new Uint8Array(W * H).fill(0);
+  let row = 0; // current time index (mod H)
+  let running = false;
+  let rafId = null;
+  let stepInterval = 1000/30;
+  let cellSize = 3;
+  let stampMode = false;
+  let stampType = "none";
+  let mouseX = 0;
+
+  // --- DOM ---
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const runBtn = document.getElementById("runBtn");
+  const stepBtn = document.getElementById("stepBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const etherBtn = document.getElementById("etherBtn");
+  const speed = document.getElementById("speed");
+  const cellSizeInput = document.getElementById("cellSize");
+  const stampSelect = document.getElementById("stampSelect");
+  const toggleStamp = document.getElementById("toggleStamp");
+
+  const demoPass = document.getElementById("demoPass");
+  const demoStationary = document.getElementById("demoStationary");
+  const demoStream = document.getElementById("demoStream");
+
+  // Resize canvas based on cell size and fixed logical size
+  function resizeCanvas() {
+    cellSize = Number(cellSizeInput.value);
+    canvas.width = W * cellSize;
+    canvas.height = H * cellSize;
+    draw();
+  }
+  resizeCanvas();
+
+  // --- Rule table for ECA 110 ---
+  // Map neighborhood (bits 0..7 order 111 110 101 100 011 010 001 000) to next state
+  const nextMap = (() => {
+    const bin = rule.toString(2).padStart(8,'0'); // '01101110'
+    const map = new Uint8Array(8);
+    // index by (l<<2)|(c<<1)|r where l,c,r in {0,1}; but we must match Wolfram order.
+    // Wolfram order index: 111->0,110->1,...,000->7. We'll invert accordingly.
+    for (let i=0;i<8;i++) map[i]=0;
+    const wolframOrder = [
+      [1,1,1],[1,1,0],[1,0,1],[1,0,0],[0,1,1],[0,1,0],[0,0,1],[0,0,0]
+    ];
+    for (let i=0;i<8;i++){
+      const [l,c,r]=wolframOrder[i];
+      const idx = (l<<2)|(c<<1)|r;
+      map[idx] = Number(bin[i]);
+    }
+    return map;
+  })();
+
+  function idx(x,y){ return (y%H)*W + (x%W+W)%W; } // wrap horizontally for display continuity
+
+  // Evolve one step: write new row at (row+1) from row
+  function step() {
+    const y0 = row % H;
+    const y1 = (row+1) % H;
+    for (let x=0;x<W;x++){
+      const L = grid[idx(x-1,y0)];
+      const C = grid[idx(x,y0)];
+      const R = grid[idx(x+1,y0)];
+      const key = (L<<2)|(C<<1)|R;
+      grid[idx(x,y1)] = nextMap[key];
+    }
+    row = y1;
+  }
+
+  // Draw whole space-time (latest row at bottom)
+  function draw() {
+    const cs = cellSize;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // Paint 0 as white, 1 as black. Latest row at bottom.
+    // Row y on screen corresponds to (row - (H-1 - y)) mod H.
+    for (let sy=0; sy<H; sy++){
+      const gy = (row - (H-1 - sy) + H) % H;
+      const base = gy * W;
+      for (let x=0; x<W; x++){
+        const v = grid[base + x];
+        if (v) {
+          ctx.fillRect(x*cs, sy*cs, cs, cs);
+        }
+      }
+    }
+    // cursor marker
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = "#000";
+    const cx = Math.floor(mouseX / cs)*cs;
+    ctx.fillRect(cx, 0, cs, canvas.height);
+    ctx.restore();
+  }
+
+  // Animation loop
+  let last = 0;
+  function loop(ts){
+    if (!running){ draw(); return; }
+    if (ts - last >= stepInterval){
+      step(); last = ts;
+    }
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // Utilities
+  function clearAll(){
+    grid.fill(0);
+    row = 0;
+    draw();
+  }
+
+  // Fill with phase-consistent ether across the row 'row'
+  function fillEther(){
+    const y = row % H;
+    // lay down many periods of ether14
+    for (let x=0; x<W; x++){
+      const bit = ether14[x % ether14.length];
+      grid[idx(x,y)] = bit;
+    }
+  }
+
+  // Stamp a pattern (array of 0/1) at (startX) in current row
+  function stamp(bits, startX){
+    const y = row % H;
+    for (let i=0;i<bits.length;i++){
+      const x = (startX + i);
+      if (x>=0 && x<W) grid[idx(x,y)] = bits[i];
+    }
+  }
+
+  // Compose: ether neighborhood + core sequence (simple concatenation helper)
+  function composeWithEther(coreBits){
+    // Place ether bits on both sides so the core sits within ether phase
+    const left = ether14; // one period
+    const right = ether14;
+    return [...left, ...coreBits, ...right];
+    // For more precise phasing, multiple periods or shifts can be used.
+  }
+
+  // --- Demos (hand-picked spacings to show behavior) ---
+  function seedPassThrough(){
+    clearAll();
+    fillEther();
+    // Right mover on the left, left mover on the right; tuned gap so they pass.
+    const rm = composeWithEther(rightMoverCore);
+    const lm = composeWithEther(leftMoverCore);
+    stamp(rm, 40);
+    stamp(lm, W - lm.length - 40);
+  }
+
+  function seedMakeStationary(){
+    clearAll();
+    fillEther();
+    // Closer spacing so the interaction yields a stationary 111 (per WP example)
+    const rm = composeWithEther(rightMoverCore);
+    const lm = composeWithEther(leftMoverCore);
+    stamp(rm, 120);
+    stamp(lm, 180); // adjust spacing to provoke stationary result
+  }
+
+  function seedStream(){
+    clearAll();
+    fillEther();
+    // Emit several right-movers at intervals (crude "gun")
+    const rm = composeWithEther(rightMoverCore);
+    for (let k=0;k<6;k++){
+      stamp(rm, 20 + k*28);
+    }
+  }
+
+  // --- Interaction handlers ---
+  runBtn.onclick = () => {
+    if (running) return;
+    running = true;
+    runBtn.disabled = true;
+    stepBtn.disabled = true;
+    pauseBtn.disabled = false;
+    rafId = requestAnimationFrame(loop);
+  };
+  pauseBtn.onclick = () => {
+    running = false;
+    runBtn.disabled = false;
+    stepBtn.disabled = false;
+    pauseBtn.disabled = true;
+    if (rafId) cancelAnimationFrame(rafId);
+    draw();
+  };
+  stepBtn.onclick = () => { step(); draw(); };
+
+  speed.oninput = () => {
+    const fps = Number(speed.value);
+    stepInterval = 1000 / Math.max(1, fps);
+  };
+
+  cellSizeInput.oninput = resizeCanvas;
+
+  clearBtn.onclick = () => { running=false; runBtn.disabled=false; stepBtn.disabled=false; pauseBtn.disabled=true; clearAll(); };
+  etherBtn.onclick = () => { fillEther(); draw(); };
+
+  stampSelect.onchange = () => stampType = stampSelect.value;
+  toggleStamp.onclick = () => {
+    stampMode = !stampMode;
+    toggleStamp.textContent = `Stamp mode: ${stampMode? 'ON' : 'OFF'}`;
+  };
+
+  demoPass.onclick = () => { seedPassThrough(); draw(); };
+  demoStationary.onclick = () => { seedMakeStationary(); draw(); };
+  demoStream.onclick = () => { seedStream(); draw(); };
+
+  // Canvas interactions
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+  });
+  canvas.addEventListener('mouseleave', () => { mouseX = -1; draw(); });
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / cellSize);
+    const y = row % H;
+    if (!stampMode || stampType === "none"){
+      // Toggle single cell
+      grid[idx(x,y)] ^= 1;
+    } else {
+      let bits = [];
+      if (stampType === "ether14") bits = ether14;
+      if (stampType === "rightMover") bits = composeWithEther(rightMoverCore);
+      if (stampType === "leftMover")  bits = composeWithEther(leftMoverCore);
+      if (stampType === "stationary") bits = composeWithEther(stationaryCore);
+      stamp(bits, x);
+    }
+    draw();
+  });
+
+  // Initial scene
+  seedPassThrough();
+  draw();
+})();
+</script>
+</body>
+</html>
