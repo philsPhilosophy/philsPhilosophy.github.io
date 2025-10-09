@@ -3,41 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>3-State Cellular Automata</title>
+  <title>3-State Totalistic Cellular Automata</title>
   <style>
     body { font-family: system-ui, sans-serif; }
-    #automata {
-      display: flex; justify-content: center; margin-top: 20px;
-    }
+    #automata { display: flex; justify-content: center; margin-top: 20px; }
     canvas { border: 1px solid #000; }
     #rule-config {
       display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 12px;
     }
     .rule-set {
       display: flex; flex-direction: column; align-items: center;
-      border: 1px solid #ccc; padding: 6px; border-radius: 6px; width: 92px;
+      border: 1px solid #ccc; padding: 8px; border-radius: 8px; width: 140px;
     }
-    .rule-row { display: flex; }
-    .rule-cell, .rule-output {
-      width: 20px; height: 20px; border: 1px solid #000; margin: 1px;
-      box-sizing: border-box;
+    .rule-title { font-size: 12px; margin-bottom: 6px; text-align: center; }
+    .rule-output {
+      width: 84px; height: 24px; border: 1px solid #000; cursor: pointer; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; user-select: none;
     }
-    .rule-output { margin-top: 6px; cursor: pointer; width: 66px; }
     #rule-number-display, #controls { text-align: center; margin: 10px 0; }
     #controls label { margin: 0 6px; }
     .btn { margin: 0 4px; padding: 6px 10px; cursor: pointer; }
     .row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .legend {
+      font-size: 12px; color: #444; text-align: center; margin: 6px 0 -4px;
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center">3-State Cellular Automata</h1>
+  <h1 style="text-align:center">3-State Totalistic Cellular Automata</h1>
 
-  <!-- Rule Configuration (27 neighborhoods) -->
+  <!-- Totalistic Rule Configuration (sums 6..0) -->
   <div id="rule-config"></div>
+  <div class="legend">Click an output to cycle: 0 → 1 → 2 → 0</div>
 
-  <!-- Calculated rule number (base-3 → decimal) -->
+  <!-- Calculated rule number (base-3 over 7 digits → decimal) -->
   <div id="rule-number-display">
-    Rule Number (ternary → decimal): <span id="rule-number">0</span>
+    Rule Number (ternary over sums 6…0 → decimal): <span id="rule-number">0</span>
   </div>
 
   <div id="controls">
@@ -67,7 +68,7 @@
     <div class="row">
       <button class="btn" id="btn-random">Randomize Rule</button>
       <button class="btn" id="btn-clear">Clear Rule</button>
-      <button class="btn" id="btn-classic">Load Classic (Rule-like)</button>
+      <button class="btn" id="btn-classic">Preset: Round(Average)</button>
     </div>
   </div>
 
@@ -76,22 +77,17 @@
   </div>
 
   <script>
-    /*** --- 3-State Automaton Core --- ***/
+    /*** --- 3-State TOTALISTIC Automaton --- ***/
 
-    // There are 3^3 = 27 neighborhood configurations.
-    // We mirror the classic binary ordering (from 222 down to 000).
-    const configurations = [];
-    for (let a = 2; a >= 0; a--) {
-      for (let b = 2; b >= 0; b--) {
-        for (let c = 2; c >= 0; c--) {
-          configurations.push([a, b, c]);
-        }
-      }
-    }
-    // ruleArray[i] ∈ {0,1,2}; length 27
-    let ruleArray = new Array(27).fill(0);
+    // Totalistic: next state depends only on sum (or average) of neighbors.
+    // With 3 neighbors (left, center, right) and states in {0,1,2}, the sum S ∈ {0..6}.
+    // We present outputs for sums in DESC order: 6,5,4,3,2,1,0 (7 bins total).
+    const sumsDesc = [6,5,4,3,2,1,0];
 
-    // Color map from state -> hex (dynamic via inputs)
+    // ruleArrayTotalistic[idx] ∈ {0,1,2}; length 7, idx 0 corresponds to sum=6, idx 6 to sum=0.
+    let ruleArray = new Array(7).fill(0);
+
+    // Color palette from state -> hex (dynamic via inputs)
     function getPalette() {
       return [
         document.getElementById('state0-color').value,
@@ -99,71 +95,61 @@
         document.getElementById('state2-color').value
       ];
     }
+    function stateToColor(s) { return getPalette()[s]; }
 
-    function stateToColor(state) { return getPalette()[state]; }
-
-    // Click to cycle output
+    // Click to cycle an output mapping for a given sum
     function toggleOutput(index) {
       ruleArray[index] = (ruleArray[index] + 1) % 3;
-      const out = document.getElementById(`output-${index}`);
-      out.style.backgroundColor = stateToColor(ruleArray[index]);
+      const btn = document.getElementById(`output-${index}`);
+      btn.style.backgroundColor = stateToColor(ruleArray[index]);
+      btn.textContent = ruleArray[index];
       updateRuleNumber();
     }
 
-    // Base-3 → decimal display of the rule vector (most-significant digit at index 0)
+    // Base-3 over 7 digits (sums 6..0, leftmost most significant) → decimal display
     function updateRuleNumber() {
-      const ruleNumber = ruleArray.reduce((acc, digit) => acc * 3 + digit, 0);
-      document.getElementById('rule-number').textContent = ruleNumber.toString(10);
+      const n = ruleArray.reduce((acc, digit) => acc * 3 + digit, 0);
+      document.getElementById('rule-number').textContent = n.toString(10);
     }
 
     function displayRuleConfig() {
-      const ruleConfigDiv = document.getElementById('rule-config');
-      ruleConfigDiv.innerHTML = '';
+      const root = document.getElementById('rule-config');
+      root.innerHTML = '';
+      sumsDesc.forEach((sum, index) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'rule-set';
 
-      configurations.forEach((config, index) => {
-        const ruleSet = document.createElement('div');
-        ruleSet.classList.add('rule-set');
+        const title = document.createElement('div');
+        title.className = 'rule-title';
+        title.innerHTML = `<b>Sum = ${sum}</b> &nbsp; (avg = ${(sum/3).toFixed(2)})`;
+        wrap.appendChild(title);
 
-        const ruleRow = document.createElement('div');
-        ruleRow.classList.add('rule-row');
+        const out = document.createElement('div');
+        out.className = 'rule-output';
+        out.id = `output-${index}`;
+        out.title = 'Click to cycle 0→1→2';
+        out.style.backgroundColor = stateToColor(ruleArray[index]);
+        out.textContent = ruleArray[index];
+        out.addEventListener('click', () => toggleOutput(index));
+        wrap.appendChild(out);
 
-        config.forEach(cellState => {
-          const div = document.createElement('div');
-          div.classList.add('rule-cell');
-          div.style.backgroundColor = stateToColor(cellState);
-          ruleRow.appendChild(div);
-        });
-
-        ruleSet.appendChild(ruleRow);
-
-        const output = document.createElement('div');
-        output.classList.add('rule-output');
-        output.id = `output-${index}`;
-        output.title = 'Click to cycle 0→1→2';
-        output.style.backgroundColor = stateToColor(ruleArray[index]);
-        output.addEventListener('click', () => toggleOutput(index));
-        ruleSet.appendChild(output);
-
-        ruleConfigDiv.appendChild(ruleSet);
+        root.appendChild(wrap);
       });
-
       updateRuleNumber();
     }
 
-    // If colors change, refresh config swatches & outputs
+    // When colors change, repaint output tiles
     function refreshConfigColors() {
-      configurations.forEach((config, index) => {
-        const swatchRow = document.querySelectorAll('.rule-set .rule-row')[index];
-        const cells = swatchRow.querySelectorAll('.rule-cell');
-        for (let i = 0; i < 3; i++) {
-          cells[i].style.backgroundColor = stateToColor(config[i]);
+      ruleArray.forEach((_, i) => {
+        const out = document.getElementById(`output-${i}`);
+        if (out) {
+          out.style.backgroundColor = stateToColor(ruleArray[i]);
         }
-        const out = document.getElementById(`output-${index}`);
-        out.style.backgroundColor = stateToColor(ruleArray[index]);
       });
     }
 
-    // Generate the automaton image based on current ruleArray and colors
+    // Evolution step using totalistic ruleArray:
+    // For each cell, compute sum = left+center+right; find index = (6 - sum); next = ruleArray[index].
     function generateAutomata() {
       const steps = parseInt(document.getElementById('steps').value, 10);
       const widthCells = parseInt(document.getElementById('width').value, 10);
@@ -184,35 +170,33 @@
       canvas.width = widthCells * cellSize;
       canvas.height = steps * cellSize;
 
-      // Build grid [rows][cols], seed center with chosen state
       const rows = steps, cols = widthCells;
       const grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
       const mid = Math.floor(cols / 2);
       grid[0][mid] = seedState;
 
-      // Evolve
+      // Evolve (zero boundary; switch to wrap by uncommenting alt lines)
       for (let r = 1; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          // Neighborhood with fixed zero at edges (you can wrap by uncommenting below)
-          const left  = c > 0        ? grid[r - 1][c - 1] : 0;
-          const center= grid[r - 1][c];
-          const right = c < cols - 1 ? grid[r - 1][c + 1] : 0;
+          // Zero boundary:
+          const left   = c > 0        ? grid[r - 1][c - 1] : 0;
+          const center = grid[r - 1][c];
+          const right  = c < cols - 1 ? grid[r - 1][c + 1] : 0;
 
-          // If you prefer wrapping boundaries, use:
-          // const left  = grid[r-1][(c - 1 + cols) % cols];
-          // const center= grid[r-1][c];
-          // const right = grid[r-1][(c + 1) % cols];
+          // // Wrapping boundary (use instead if preferred):
+          // const left   = grid[r - 1][(c - 1 + cols) % cols];
+          // const center = grid[r - 1][c];
+          // const right  = grid[r - 1][(c + 1) % cols];
 
-          // Index in [0..26] for (left,center,right) in lexicographic order 222..000
-          const ternaryIndex = left * 9 + center * 3 + right;   // 0..26 (000..222)
-          const lookupIndex = 26 - ternaryIndex;                // reverse to 222..000
-          grid[r][c] = ruleArray[lookupIndex];
+          const sum = left + center + right; // 0..6
+          const idx = 6 - sum;               // map sum 6..0 → indices 0..6
+          grid[r][c] = ruleArray[idx];
         }
       }
 
       // Draw
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       const palette = getPalette();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           ctx.fillStyle = palette[grid[r][c]];
@@ -224,33 +208,33 @@
     /*** --- Helpers / Presets --- ***/
     function randomizeRule() {
       ruleArray = ruleArray.map(() => Math.floor(Math.random() * 3));
-      // Update outputs
       ruleArray.forEach((_, i) => {
         const out = document.getElementById(`output-${i}`);
         out.style.backgroundColor = stateToColor(ruleArray[i]);
+        out.textContent = ruleArray[i];
       });
       updateRuleNumber();
     }
 
     function clearRule() {
-      ruleArray = new Array(27).fill(0);
+      ruleArray = new Array(7).fill(0);
       ruleArray.forEach((_, i) => {
         const out = document.getElementById(`output-${i}`);
         out.style.backgroundColor = stateToColor(0);
+        out.textContent = '0';
       });
       updateRuleNumber();
     }
 
-    // A simple “classic-like” preset: outputs = center (identity rule)
-    function loadClassicIdentity() {
-      // If the center is s, output s
-      // For each (L,C,R), output = C → in our reversed order we must compute per config
-      configurations.forEach((cfg, idx) => {
-        ruleArray[idx] = cfg[1];
+    // Preset: output = round(average)  (i.e., round(sum/3))
+    function loadPresetRoundAverage() {
+      sumsDesc.forEach((sum, i) => {
+        ruleArray[i] = Math.round(sum / 3);
       });
       ruleArray.forEach((_, i) => {
         const out = document.getElementById(`output-${i}`);
         out.style.backgroundColor = stateToColor(ruleArray[i]);
+        out.textContent = ruleArray[i];
       });
       updateRuleNumber();
     }
@@ -259,9 +243,8 @@
     document.getElementById('btn-generate').addEventListener('click', generateAutomata);
     document.getElementById('btn-random').addEventListener('click', randomizeRule);
     document.getElementById('btn-clear').addEventListener('click', clearRule);
-    document.getElementById('btn-classic').addEventListener('click', loadClassicIdentity);
+    document.getElementById('btn-classic').addEventListener('click', loadPresetRoundAverage);
 
-    // Repaint config swatches when colors change
     ['state0-color','state1-color','state2-color'].forEach(id => {
       document.getElementById(id).addEventListener('input', refreshConfigColors);
     });
