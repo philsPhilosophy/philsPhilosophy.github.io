@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cellular Automata</title>
+  <style>
+    #automata { display: flex; justify-content: center; margin-top: 20px; }
+    canvas { border: 1px solid black; }
+    #rule-config { display: flex; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .rule-set { display: flex; flex-direction: column; align-items: center; }
+    .rule-row { display: flex; }
+    .rule-cell { width: 20px; height: 20px; border: 1px solid black; margin: 1px; }
+    .rule-output { width: 20px; height: 20px; border: 1px solid black; margin-top: 5px; cursor: pointer; }
+    .rule-output.black { background-color: black; }
+    #rule-number-display { text-align: center; margin-top: 10px; }
+    #controls { text-align: center; margin: 10px 0; display: grid; gap: 8px; justify-content: center; }
+    #controls .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    #first-row { width: 320px; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center">Cellular Automata</h1>
+
+  <!-- Rule Configuration -->
+  <div id="rule-config"></div>
+
+  <!-- Display the calculated rule number -->
+  <div id="rule-number-display">
+    Rule Number: <span id="rule-number">0</span>
+  </div>
+
+  <div id="controls">
+    <div class="row">
+      <label for="steps">Number of Steps:</label>
+      <input type="number" id="steps" name="steps" min="1" value="60">
+      <label for="width">Width (cells):</label>
+      <input type="number" id="width" name="width" min="3" value="120">
+    </div>
+
+    <div class="row">
+      <label for="first-row">First row (0/1 string):</label>
+      <input type="text" id="first-row" placeholder="e.g. 0001000 or 10101 ... (leave blank for single 1 in center)">
+    </div>
+
+    <div class="row">
+      <label for="live-color">Live Cell Color:</label>
+      <input type="color" id="live-color" value="#000000">
+      <label for="dead-color">Dead Cell Color:</label>
+      <input type="color" id="dead-color" value="#FFFFFF">
+      <button onclick="generateAutomata()">Generate</button>
+    </div>
+  </div>
+
+  <div id="automata">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+    const configurations = [
+      [1, 1, 1],
+      [1, 1, 0],
+      [1, 0, 1],
+      [1, 0, 0],
+      [0, 1, 1],
+      [0, 1, 0],
+      [0, 0, 1],
+      [0, 0, 0]
+    ];
+
+    let ruleArray = new Array(8).fill(0); // Start with all rules set to 0
+
+    function toggleOutput(index) {
+      ruleArray[index] = ruleArray[index] === 0 ? 1 : 0;
+      document.getElementById(`output-${index}`).classList.toggle('black');
+      updateRuleNumber();
+    }
+
+    function updateRuleNumber() {
+      const ruleNumber = parseInt(ruleArray.join(''), 2);
+      document.getElementById('rule-number').textContent = ruleNumber;
+    }
+
+    function displayRuleConfig() {
+      const ruleConfigDiv = document.getElementById('rule-config');
+      ruleConfigDiv.innerHTML = '';
+
+      configurations.forEach((config, index) => {
+        const ruleSet = document.createElement('div');
+        ruleSet.classList.add('rule-set');
+
+        const ruleRow = document.createElement('div');
+        ruleRow.classList.add('rule-row');
+
+        config.forEach(cell => {
+          const div = document.createElement('div');
+          div.classList.add('rule-cell');
+          div.style.backgroundColor = cell === 1 ? 'black' : 'white';
+          ruleRow.appendChild(div);
+        });
+
+        ruleSet.appendChild(ruleRow);
+
+        const output = document.createElement('div');
+        output.classList.add('rule-output');
+        output.id = `output-${index}`;
+        output.addEventListener('click', () => toggleOutput(index));
+        ruleSet.appendChild(output);
+
+        ruleConfigDiv.appendChild(ruleSet);
+      });
+
+      updateRuleNumber();
+    }
+
+    // Build the first row based on user input string and width.
+    // Rules:
+    // - If blank: single 1 centered.
+    // - If contains characters other than 0/1: reject.
+    // - If longer than width: trim to width (centered).
+    // - If shorter than width: center it within width, padding with 0s.
+    function buildFirstRow(width, patternStr) {
+      if (!patternStr) {
+        const row = new Array(width).fill(0);
+        row[Math.floor(width / 2)] = 1;
+        return row;
+      }
+
+      const clean = patternStr.trim();
+      if (!/^[01]+$/.test(clean)) {
+        alert('First row must be a string of 0s and 1s only.');
+        return null;
+      }
+
+      let bits = clean.split('').map(ch => Number(ch));
+
+      if (bits.length > width) {
+        // Trim from both ends to center (keep a centered slice)
+        const start = Math.floor((bits.length - width) / 2);
+        bits = bits.slice(start, start + width);
+      } else if (bits.length < width) {
+        // Center within width
+        const padTotal = width - bits.length;
+        const padLeft = Math.floor(padTotal / 2);
+        const padRight = padTotal - padLeft;
+        bits = new Array(padLeft).fill(0).concat(bits, new Array(padRight).fill(0));
+      }
+      return bits;
+    }
+
+    function generateAutomata() {
+      const stepsVal = document.getElementById('steps').value;
+      const widthVal = document.getElementById('width').value;
+      const firstRowStr = document.getElementById('first-row').value;
+      const liveColor = document.getElementById('live-color').value;
+      const deadColor = document.getElementById('dead-color').value;
+
+      if (stepsVal === '' || widthVal === '') {
+        alert('Please enter both steps and width.');
+        return;
+      }
+
+      const numSteps = parseInt(stepsVal, 10);
+      const widthCells = parseInt(widthVal, 10);
+
+      if (numSteps < 1 || widthCells < 3) {
+        alert('Steps must be ≥ 1 and width must be ≥ 3.');
+        return;
+      }
+
+      const firstRow = buildFirstRow(widthCells, firstRowStr);
+      if (!firstRow) return; // invalid input handled in builder
+
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+
+      const maxCanvas = 800;
+      const cellSize = Math.max(1, Math.floor(Math.min(maxCanvas / numSteps, maxCanvas / widthCells)));
+
+      canvas.width = widthCells * cellSize;
+      canvas.height = numSteps * cellSize;
+
+      const automata = Array.from({ length: numSteps }, () => new Array(widthCells).fill(0));
+      automata[0] = firstRow.slice();
+
+      // Evolve (no wrapping; edges assume 0 neighbors outside)
+      for (let i = 1; i < numSteps; i++) {
+        for (let j = 0; j < widthCells; j++) {
+          const left = j > 0 ? automata[i - 1][j - 1] : 0;
+          const center = automata[i - 1][j];
+          const right = j < widthCells - 1 ? automata[i - 1][j + 1] : 0;
+          const binaryIndex = left * 4 + center * 2 + right; // 0..7 for (000..111)
+          automata[i][j] = ruleArray[7 - binaryIndex]; // reverse to match display order
+        }
+      }
+
+      // Draw
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < numSteps; i++) {
+        for (let j = 0; j < widthCells; j++) {
+          context.fillStyle = automata[i][j] ? liveColor : deadColor;
+          context.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    displayRuleConfig();
+  </script>
+</body>
+</html>
