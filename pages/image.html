@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Radius-2 Cellular Automaton (Rule 4067213884)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 20px; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; align-items: end; }
+  label { font-size: 14px; display: grid; gap: 4px; }
+  input[type="number"] { padding: 6px 8px; font-size: 14px; }
+  button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  canvas { border: 1px solid #888; margin-top: 12px; image-rendering: pixelated; }
+  .row { display: flex; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+  <h1>Radius-2 Cellular Automaton</h1>
+  <p>This renders a 1-D binary CA using Wolfram numbering for radius 2 (5-cell neighborhood). Try the famous nested pattern: <strong>rule 4067213884</strong>.</p>
+
+  <div class="controls">
+    <label>
+      Rule number (0–4294967295)
+      <input id="rule" type="number" min="0" max="4294967295" value="4067213884" />
+    </label>
+    <label>
+      Width (cells)
+      <input id="width" type="number" min="16" max="4096" value="400" />
+    </label>
+    <label>
+      Steps (rows)
+      <input id="steps" type="number" min="1" max="4096" value="300" />
+    </label>
+    <label>
+      Cell size (px)
+      <input id="cellSize" type="number" min="1" max="20" value="2" />
+    </label>
+    <label class="row">
+      <input id="randomInit" type="checkbox" checked />
+      Randomize first row
+    </label>
+    <label class="row">
+      <input id="wrap" type="checkbox" checked />
+      Wrap edges (periodic)
+    </label>
+    <label class="row">
+      <input id="invert" type="checkbox" />
+      Invert colors
+    </label>
+    <button id="renderBtn">Render</button>
+    <button id="randomizeBtn">Randomize & Render</button>
+    <button id="singleSeedBtn">Single-1 & Render</button>
+  </div>
+
+  <canvas id="ca"></canvas>
+
+<script>
+(function(){
+  const ruleEl = document.getElementById('rule');
+  const widthEl = document.getElementById('width');
+  const stepsEl = document.getElementById('steps');
+  const cellSizeEl = document.getElementById('cellSize');
+  const randomInitEl = document.getElementById('randomInit');
+  const wrapEl = document.getElementById('wrap');
+  const invertEl = document.getElementById('invert');
+  const canvas = document.getElementById('ca');
+  const ctx = canvas.getContext('2d');
+
+  // Build a 32-entry lookup table from the uint32 rule number.
+  function makeRuleTable(ruleNumber) {
+    // For Wolfram codes, bit i (LSB=0) corresponds to neighborhood with binary value i.
+    // For radius 2, neighborhoods are 5 bits: b4 b3 b2 b1 b0; index = (b4<<4)|...|b0
+    const table = new Uint8Array(32);
+    // Ensure uint32
+    const n = Number(ruleNumber) >>> 0;
+    for (let i = 0; i < 32; i++) {
+      table[i] = (n >>> i) & 1;
+    }
+    return table;
+  }
+
+  function nextRow(curr, table, wrap) {
+    const W = curr.length;
+    const next = new Uint8Array(W);
+    for (let x = 0; x < W; x++) {
+      // Indices with optional wrapping
+      const xm2 = wrap ? (x - 2 + W) % W : Math.max(0, x - 2);
+      const xm1 = wrap ? (x - 1 + W) % W : Math.max(0, x - 1);
+      const xp1 = wrap ? (x + 1) % W : Math.min(W - 1, x + 1);
+      const xp2 = wrap ? (x + 2) % W : Math.min(W - 1, x + 2);
+
+      // Neighborhood bits: [x-2, x-1, x, x+1, x+2]
+      const b4 = curr[xm2] & 1;
+      const b3 = curr[xm1] & 1;
+      const b2 = curr[x] & 1;
+      const b1 = curr[xp1] & 1;
+      const b0 = curr[xp2] & 1;
+
+      const idx = (b4<<4) | (b3<<3) | (b2<<2) | (b1<<1) | b0; // 0..31
+      next[x] = table[idx];
+    }
+    return next;
+  }
+
+  function randomRow(W) {
+    const row = new Uint8Array(W);
+    for (let i = 0; i < W; i++) row[i] = Math.random() < 0.5 ? 0 : 1;
+    return row;
+  }
+
+  function singleSeedRow(W) {
+    const row = new Uint8Array(W);
+    row[W >> 1] = 1;
+    return row;
+  }
+
+  function draw(grid, cellSize, invert=false) {
+    const rows = grid.length;
+    const cols = grid[0].length;
+    canvas.width = cols * cellSize;
+    canvas.height = rows * cellSize;
+
+    const img = ctx.createImageData(canvas.width, canvas.height);
+    const on = invert ? 255 : 0;
+    const off = invert ? 0 : 255;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const color = grid[r][c] ? on : off;
+        // Fill the cellSize×cellSize block
+        for (let dy = 0; dy < cellSize; dy++) {
+          const y = r * cellSize + dy;
+          const rowOffset = y * canvas.width * 4;
+          for (let dx = 0; dx < cellSize; dx++) {
+            const x = c * cellSize + dx;
+            const k = rowOffset + x * 4;
+            img.data[k+0] = color;
+            img.data[k+1] = color;
+            img.data[k+2] = color;
+            img.data[k+3] = 255;
+          }
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  function run(renderOpts) {
+    const rule = Number(ruleEl.value) >>> 0;
+    const W = Math.max(1, Math.min(4096, Number(widthEl.value)|0));
+    const H = Math.max(1, Math.min(4096, Number(stepsEl.value)|0));
+    const s = Math.max(1, Math.min(20, Number(cellSizeEl.value)|0));
+    const wrap = !!wrapEl.checked;
+    const invert = !!invertEl.checked;
+
+    const table = makeRuleTable(rule);
+
+    // Initial row
+    let row;
+    if (renderOpts?.init === 'random' || (renderOpts?.init == null && randomInitEl.checked)) {
+      row = randomRow(W);
+    } else if (renderOpts?.init === 'single') {
+      row = singleSeedRow(W);
+    } else {
+      row = singleSeedRow(W); // fallback
+    }
+
+    const grid = new Array(H);
+    grid[0] = row;
+    for (let r = 1; r < H; r++) {
+      grid[r] = nextRow(grid[r-1], table, wrap);
+    }
+    draw(grid, s, invert);
+  }
+
+  document.getElementById('renderBtn').addEventListener('click', () => run({}));
+  document.getElementById('randomizeBtn').addEventListener('click', () => run({ init: 'random' }));
+  document.getElementById('singleSeedBtn').addEventListener('click', () => run({ init: 'single' }));
+
+  // Auto-render once on load
+  run({ init: 'random' });
+})();
+</script>
+</body>
+</html>
