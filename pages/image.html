@@ -3,20 +3,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Radius-2 Cellular Automaton (Rule 4067213884)</title>
+<title>Radius-2 Cellular Automaton (Rule 4067213884) — Random 3-Color</title>
 <style>
   body { font-family: system-ui, sans-serif; margin: 20px; }
-  .controls { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; align-items: end; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 10px; align-items: end; }
   label { font-size: 14px; display: grid; gap: 4px; }
   input[type="number"] { padding: 6px 8px; font-size: 14px; }
   button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
-  canvas { border: 1px solid #888; margin-top: 12px; image-rendering: pixelated; }
+  canvas { border: 1px solid #888; margin-top: 12px; image-rendering: pixelated; display:block; }
   .row { display: flex; gap: 8px; align-items: center; }
+  .swatches { display:flex; gap:10px; align-items:center; margin-top: 8px; }
+  .swatch { width: 20px; height: 20px; border:1px solid #0003; border-radius:4px; }
+  .legend { font-size: 12px; color: #555; display:flex; gap:12px; }
 </style>
 </head>
 <body>
   <h1>Radius-2 Cellular Automaton</h1>
-  <p>This renders a 1-D binary CA using Wolfram numbering for radius 2 (5-cell neighborhood). Try the famous nested pattern: <strong>rule 4067213884</strong>.</p>
+  <p>Binary CA with Wolfram-style radius 2 (5-cell neighborhood). Famous nested rule: <strong>4067213884</strong>. The
+  <em>Randomize &amp; Render</em> button now picks a new random set of <strong>three colors</strong> (background, OFF, ON) each time.</p>
 
   <div class="controls">
     <label>
@@ -45,11 +49,20 @@
     </label>
     <label class="row">
       <input id="invert" type="checkbox" />
-      Invert colors
+      Invert ON/OFF
     </label>
     <button id="renderBtn">Render</button>
-    <button id="randomizeBtn">Randomize & Render</button>
-    <button id="singleSeedBtn">Single-1 & Render</button>
+    <button id="randomizeBtn">Randomize &amp; Render</button>
+    <button id="singleSeedBtn">Single-1 &amp; Render</button>
+  </div>
+
+  <div class="swatches">
+    <div class="legend">
+      <span>BG</span><span>OFF</span><span>ON</span>
+    </div>
+    <div id="swatch-bg" class="swatch"></div>
+    <div id="swatch-off" class="swatch"></div>
+    <div id="swatch-on" class="swatch"></div>
   </div>
 
   <canvas id="ca"></canvas>
@@ -66,16 +79,68 @@
   const canvas = document.getElementById('ca');
   const ctx = canvas.getContext('2d');
 
-  // Build a 32-entry lookup table from the uint32 rule number.
-  function makeRuleTable(ruleNumber) {
-    // For Wolfram codes, bit i (LSB=0) corresponds to neighborhood with binary value i.
-    // For radius 2, neighborhoods are 5 bits: b4 b3 b2 b1 b0; index = (b4<<4)|...|b0
-    const table = new Uint8Array(32);
-    // Ensure uint32
-    const n = Number(ruleNumber) >>> 0;
-    for (let i = 0; i < 32; i++) {
-      table[i] = (n >>> i) & 1;
+  const swBG = document.getElementById('swatch-bg');
+  const swOFF = document.getElementById('swatch-off');
+  const swON = document.getElementById('swatch-on');
+
+  let currentColors = randomThreeColors(); // {bg, off, on}
+
+  updateSwatches();
+
+  function randomHexColor() {
+    // pleasant random HSL converted to RGB/hex, with clamped lightness for visibility
+    const h = Math.floor(Math.random()*360);
+    const s = 60 + Math.floor(Math.random()*30); // 60–90
+    const l = 45 + Math.floor(Math.random()*20); // 45–65
+    // Convert HSL to RGB
+    function h2rgb(p, q, t){
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
     }
+    const H = h/360, S = s/100, L = l/100;
+    let r, g, b;
+    if (S === 0) {
+      r = g = b = L;
+    } else {
+      const q = L < 0.5 ? L * (1 + S) : L + S - L * S;
+      const p = 2 * L - q;
+      r = h2rgb(p, q, H + 1/3);
+      g = h2rgb(p, q, H);
+      b = h2rgb(p, q, H - 1/3);
+    }
+    const R = Math.round(r*255), G = Math.round(g*255), B = Math.round(b*255);
+    return { hex: "#" + [R,G,B].map(v => v.toString(16).padStart(2,'0')).join(''), rgb: [R,G,B] };
+  }
+
+  function randomThreeColors(){
+    // pick three distinctish hues; simple retry to reduce collisions
+    let c1 = randomHexColor();
+    let c2, c3;
+    do { c2 = randomHexColor(); } while (colorDistance(c1.rgb, c2.rgb) < 80);
+    do { c3 = randomHexColor(); } while (colorDistance(c1.rgb, c3.rgb) < 80 || colorDistance(c2.rgb, c3.rgb) < 80);
+    return { bg: c1, off: c2, on: c3 };
+  }
+
+  function colorDistance(a, b){
+    // Euclidean in RGB
+    const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+    return Math.sqrt(dr*dr+dg*dg+db*db);
+  }
+
+  function updateSwatches(){
+    swBG.style.background = currentColors.bg.hex;
+    swOFF.style.background = currentColors.off.hex;
+    swON.style.background = currentColors.on.hex;
+  }
+
+  function makeRuleTable(ruleNumber) {
+    const table = new Uint8Array(32);
+    const n = Number(ruleNumber) >>> 0;
+    for (let i = 0; i < 32; i++) table[i] = (n >>> i) & 1;
     return table;
   }
 
@@ -83,20 +148,16 @@
     const W = curr.length;
     const next = new Uint8Array(W);
     for (let x = 0; x < W; x++) {
-      // Indices with optional wrapping
       const xm2 = wrap ? (x - 2 + W) % W : Math.max(0, x - 2);
       const xm1 = wrap ? (x - 1 + W) % W : Math.max(0, x - 1);
       const xp1 = wrap ? (x + 1) % W : Math.min(W - 1, x + 1);
       const xp2 = wrap ? (x + 2) % W : Math.min(W - 1, x + 2);
-
-      // Neighborhood bits: [x-2, x-1, x, x+1, x+2]
       const b4 = curr[xm2] & 1;
       const b3 = curr[xm1] & 1;
       const b2 = curr[x] & 1;
       const b1 = curr[xp1] & 1;
       const b0 = curr[xp2] & 1;
-
-      const idx = (b4<<4) | (b3<<3) | (b2<<2) | (b1<<1) | b0; // 0..31
+      const idx = (b4<<4)|(b3<<3)|(b2<<2)|(b1<<1)|b0;
       next[x] = table[idx];
     }
     return next;
@@ -120,24 +181,36 @@
     canvas.width = cols * cellSize;
     canvas.height = rows * cellSize;
 
-    const img = ctx.createImageData(canvas.width, canvas.height);
-    const on = invert ? 255 : 0;
-    const off = invert ? 0 : 255;
+    // Prepare colors
+    const bgRGB = currentColors.bg.rgb;
+    const offRGB = invert ? currentColors.on.rgb : currentColors.off.rgb;
+    const onRGB  = invert ? currentColors.off.rgb : currentColors.on.rgb;
+
+    // Paint background first for speed
+    ctx.fillStyle = currentColors.bg.hex;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = img.data;
+
+    const putPx = (x, y, rgb) => {
+      const k = (y * canvas.width + x) * 4;
+      data[k+0] = rgb[0];
+      data[k+1] = rgb[1];
+      data[k+2] = rgb[2];
+      data[k+3] = 255;
+    };
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const color = grid[r][c] ? on : off;
+        const rgb = grid[r][c] ? onRGB : offRGB;
         // Fill the cellSize×cellSize block
+        const y0 = r * cellSize;
+        const x0 = c * cellSize;
         for (let dy = 0; dy < cellSize; dy++) {
-          const y = r * cellSize + dy;
-          const rowOffset = y * canvas.width * 4;
+          const y = y0 + dy;
           for (let dx = 0; dx < cellSize; dx++) {
-            const x = c * cellSize + dx;
-            const k = rowOffset + x * 4;
-            img.data[k+0] = color;
-            img.data[k+1] = color;
-            img.data[k+2] = color;
-            img.data[k+3] = 255;
+            putPx(x0 + dx, y, rgb);
           }
         }
       }
@@ -155,27 +228,38 @@
 
     const table = makeRuleTable(rule);
 
-    // Initial row
     let row;
     if (renderOpts?.init === 'random' || (renderOpts?.init == null && randomInitEl.checked)) {
       row = randomRow(W);
     } else if (renderOpts?.init === 'single') {
       row = singleSeedRow(W);
     } else {
-      row = singleSeedRow(W); // fallback
+      row = singleSeedRow(W);
     }
 
     const grid = new Array(H);
     grid[0] = row;
-    for (let r = 1; r < H; r++) {
-      grid[r] = nextRow(grid[r-1], table, wrap);
-    }
+    for (let r = 1; r < H; r++) grid[r] = nextRow(grid[r-1], table, wrap);
+
     draw(grid, s, invert);
   }
 
-  document.getElementById('renderBtn').addEventListener('click', () => run({}));
-  document.getElementById('randomizeBtn').addEventListener('click', () => run({ init: 'random' }));
-  document.getElementById('singleSeedBtn').addEventListener('click', () => run({ init: 'single' }));
+  document.getElementById('renderBtn').addEventListener('click', () => {
+    // keep current colors; just render
+    run({});
+  });
+
+  document.getElementById('randomizeBtn').addEventListener('click', () => {
+    // new random initial row + new random colors
+    currentColors = randomThreeColors();
+    updateSwatches();
+    run({ init: 'random' });
+  });
+
+  document.getElementById('singleSeedBtn').addEventListener('click', () => {
+    // keep current colors but reset to single seed
+    run({ init: 'single' });
+  });
 
   // Auto-render once on load
   run({ init: 'random' });
