@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cellular Automata: Square N & First n Primes</title>
+<style>
+  :root { --fg:#111; --muted:#666; --bg:#fff; --grid:#ddd; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--fg); background:var(--bg); margin:0; }
+  header { padding:16px 20px; border-bottom:1px solid #eee; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0 12px 0 0; }
+  .tabbar { display:flex; gap:8px; margin-left:auto; }
+  .tabbar button { border:1px solid #ddd; background:#f7f7f7; padding:8px 10px; border-radius:8px; cursor:pointer; }
+  .tabbar button.active { background:#111; color:#fff; border-color:#111; }
+  .panel { display:none; padding:16px 20px; }
+  .panel.active { display:block; }
+  .controls { display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:12px; }
+  .controls label { font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+  .controls input[type="number"] { width:110px; padding:6px 8px; border:1px solid #ddd; border-radius:8px; }
+  .controls button { padding:8px 12px; border:1px solid #111; background:#111; color:#fff; border-radius:8px; cursor:pointer; }
+  .row { display:flex; gap:24px; align-items:flex-start; }
+  canvas { border:1px solid #eee; background:#fff; image-rendering: pixelated; }
+  .readout { font-size:13px; color:#333; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .legend { font-size:12px; color:#555; margin-top:8px; }
+  ul.legend { margin:6px 0 0 18px; padding:0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cellular Automata: Squaring & Primes</h1>
+  <div class="tabbar">
+    <button data-tab="square" class="active">Square N (2D)</button>
+    <button data-tab="primes">First n Primes (1D sieve)</button>
+  </div>
+</header>
+
+<!-- Square N panel -->
+<section id="square" class="panel active">
+  <div class="controls">
+    <div>
+      <label for="sqN">N (signals per axis)</label>
+      <input id="sqN" type="number" min="1" max="128" value="12"/>
+    </div>
+    <div>
+      <label for="sqGrid">Grid size (cells / side)</label>
+      <input id="sqGrid" type="number" min="32" max="512" value="128"/>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button id="sqInit">Initialize</button>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button id="sqRun">Run / Pause</button>
+    </div>
+    <div class="readout">
+      <div><strong>Crossings</strong> (should be N²): <span id="sqCount">0</span></div>
+      <div class="mono">N² = <span id="sqN2">0</span></div>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <canvas id="sqCanvas" width="512" height="512"></canvas>
+      <div class="legend">
+        <ul class="legend">
+          <li>Blue = horizontal signals (→)</li>
+          <li>Red = vertical signals (↓)</li>
+          <li>Black dot = crossing (counts toward N²)</li>
+        </ul>
+      </div>
+    </div>
+    <div style="max-width:420px">
+      <p><strong>How the 2D CA squares N:</strong> We seed <em>N</em> horizontal and <em>N</em> vertical particles. Each step,
+      horizontal particles move right; vertical move down. When both are present in a cell simultaneously, the cell deposits
+      a permanent black mark. Because every horizontal meets every vertical exactly once, the total marks = <em>N×N</em>.</p>
+      <p>This uses purely local rules: each cell’s next state depends only on its own content and immediate neighbors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Primes panel -->
+<section id="primes" class="panel">
+  <div class="controls">
+    <div>
+      <label for="pN">How many primes (n)</label>
+      <input id="pN" type="number" min="1" max="200" value="30"/>
+    </div>
+    <div>
+      <label for="pWidth">Tape length (max integer)</label>
+      <input id="pWidth" type="number" min="50" max="2000" value="400"/>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button id="pInit">Initialize</button>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button id="pRun">Run / Pause</button>
+    </div>
+    <div class="readout">
+      <div><strong>Found primes:</strong> <span id="pCount">0</span> / <span id="pGoal">0</span></div>
+      <div class="mono">Primes: <span id="pList"></span></div>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <canvas id="pCanvas" width="900" height="220"></canvas>
+      <div class="legend">
+        <ul class="legend">
+          <li>White = unknown</li>
+          <li>Black = composite</li>
+          <li>Green = prime (confirmed & frozen)</li>
+          <li>Purple dots = active local “walkers” carrying period p</li>
+        </ul>
+      </div>
+    </div>
+    <div style="max-width:520px">
+      <p><strong>How the 1D sieve CA works:</strong> Cells represent integers 2,3,4,… laid left→right. A walker with period
+      <em>p</em> moves one cell per tick. Each step it decrements a local countdown; when it reaches 0 on a live (unknown) cell,
+      it marks it composite and resets its countdown to <em>p</em>. When a walker reaches a still-unknown cell (i.e., it has not been
+      marked composite by any smaller period), that cell becomes a prime emitter: it is frozen green and spawns a brand-new
+      walker with period <em>p = cell’s number</em>. No global knowledge—just local interactions.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabbar button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- Square N (2D CA) ---------- */
+(() => {
+  const cvs = document.getElementById('sqCanvas');
+  const ctx = cvs.getContext('2d');
+  const initBtn = document.getElementById('sqInit');
+  const runBtn = document.getElementById('sqRun');
+  const nInput = document.getElementById('sqN');
+  const gridInput = document.getElementById('sqGrid');
+  const countOut = document.getElementById('sqCount');
+  const n2Out = document.getElementById('sqN2');
+
+  let W = 128, H = 128, cellSize, running=false, rafId=null;
+  let grid, nextGrid, crossings=0, N=12;
+
+  // cell bitmask
+  const EMPTY=0, HOR=1, VER=2, DOT=4;
+
+  function alloc() {
+    grid = new Uint8Array(W*H);
+    nextGrid = new Uint8Array(W*H);
+  }
+  function idx(x,y){ return y*W + x; }
+
+  function clearCanvas(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,cvs.width,cvs.height);
+    // grid lines (light)
+    ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+    for(let x=0; x<=W; x++){
+      ctx.beginPath(); ctx.moveTo(Math.floor(x*cellSize)+0.5,0);
+      ctx.lineTo(Math.floor(x*cellSize)+0.5,H*cellSize); ctx.stroke();
+    }
+    for(let y=0; y<=H; y++){
+      ctx.beginPath(); ctx.moveTo(0,Math.floor(y*cellSize)+0.5);
+      ctx.lineTo(W*cellSize,Math.floor(y*cellSize)+0.5); ctx.stroke();
+    }
+  }
+
+  function draw() {
+    clearCanvas();
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        const v = grid[idx(x,y)];
+        const cx = x*cellSize, cy = y*cellSize;
+        if (v & DOT){
+          ctx.fillStyle='#000';
+          ctx.beginPath();
+          const pad = Math.max(1, cellSize*0.2);
+          ctx.arc(cx+cellSize/2, cy+cellSize/2, (cellSize/2 - pad), 0, Math.PI*2);
+          ctx.fill();
+        }
+        if (v & HOR){
+          ctx.strokeStyle='#1e68ff'; ctx.lineWidth=Math.max(1, cellSize*0.25);
+          ctx.beginPath(); ctx.moveTo(cx+2, cy+cellSize/2); ctx.lineTo(cx+cellSize-2, cy+cellSize/2); ctx.stroke();
+        }
+        if (v & VER){
+          ctx.strokeStyle='#e63b2e'; ctx.lineWidth=Math.max(1, cellSize*0.25);
+          ctx.beginPath(); ctx.moveTo(cx+cellSize/2, cy+2); ctx.lineTo(cx+cellSize/2, cy+cellSize-2); ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function seedSignals(N){
+    // place N verticals equally spaced on top row, and N horizontals equally spaced on left column
+    const pad = 2;
+    const xs = Array.from({length:N}, (_,i)=> Math.floor((i+1)*(W-2*pad)/(N+1))+pad);
+    const ys = Array.from({length:N}, (_,i)=> Math.floor((i+1)*(H-2*pad)/(N+1))+pad);
+    for(const x of xs){ grid[idx(x,0)] |= VER; }
+    for(const y of ys){ grid[idx(0,y)] |= HOR; }
+  }
+
+  function step(){
+    nextGrid.fill(0);
+    let c = 0;
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        const v = grid[idx(x,y)];
+        // dots persist
+        if (v & DOT) nextGrid[idx(x,y)] |= DOT;
+
+        // move horizontal →
+        if (v & HOR){
+          const nx = (x+1 < W) ? x+1 : x; // stop at edge
+          nextGrid[idx(nx,y)] |= HOR;
+        }
+        // move vertical ↓
+        if (v & VER){
+          const ny = (y+1 < H) ? y+1 : y;
+          nextGrid[idx(x,ny)] |= VER;
+        }
+      }
+    }
+    // crossings: where both present this tick → lay dot
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        const v = nextGrid[idx(x,y)];
+        if ( (v & HOR) && (v & VER) ){
+          // deposit permanent dot
+          if ((nextGrid[idx(x,y)] & DOT) === 0) { c++; }
+          nextGrid[idx(x,y)] |= DOT;
+        }
+      }
+    }
+    crossings += c;
+    grid.set(nextGrid);
+  }
+
+  function animate(){
+    if (!running) return;
+    for(let k=0;k<2;k++) step(); // run faster
+    draw();
+    countOut.textContent = crossings.toString();
+    rafId = requestAnimationFrame(animate);
+  }
+
+  function init() {
+    N = Math.max(1, Math.min(128, +nInput.value|0));
+    W = H = Math.max(32, Math.min(512, +gridInput.value|0));
+    cellSize = Math.floor(Math.min(512/W, 512/H));
+    cvs.width = W*cellSize; cvs.height = H*cellSize;
+    alloc();
+    crossings = 0;
+    seedSignals(N);
+    n2Out.textContent = (N*N).toString();
+    draw();
+  }
+
+  initBtn.addEventListener('click', ()=>{ running=false; cancelAnimationFrame(rafId); init(); });
+  runBtn.addEventListener('click', ()=>{
+    running = !running;
+    if (running) animate(); else cancelAnimationFrame(rafId);
+  });
+
+  // boot
+  init();
+})();
+
+/* ---------- First n primes (1D CA sieve with local walkers) ---------- */
+(() => {
+  const cvs = document.getElementById('pCanvas');
+  const ctx = cvs.getContext('2d');
+  const initBtn = document.getElementById('pInit');
+  const runBtn = document.getElementById('pRun');
+  const nInput = document.getElementById('pN');
+  const widthInput = document.getElementById('pWidth');
+  const pCount = document.getElementById('pCount');
+  const pGoal = document.getElementById('pGoal');
+  const pList = document.getElementById('pList');
+
+  let W = 400;     // number of integers shown: 2..(W+1)
+  let H = 100;     // render height in px (fixed)
+  let scaleX = 2;  // px per cell
+  let padding = 10;
+
+  const State = {
+    UNKNOWN:0, COMPOSITE:1, PRIME:2
+  };
+
+  // Each tape cell:
+  // state: UNKNOWN/COMPOSITE/PRIME
+  // walkers: array of countdowns associated with period p (we store {p, c} locally)
+  // We keep walkers redundantly in cells they currently occupy (purely local).
+  let cells = [];  // length W, cells[i] represents number (i+2)
+  let running=false, rafId=null;
+  let goal=30, found=0, primeList=[];
+
+  function makeCells(){
+    cells = Array.from({length:W}, (_,i)=>({
+      state: State.UNKNOWN,
+      walkers: [] // walkers in this cell at this tick
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    // background tape
+    for(let i=0;i<W;i++){
+      const x = padding + i*scaleX;
+      switch(cells[i].state){
+        case State.UNKNOWN: ctx.fillStyle='#ffffff'; break;
+        case State.COMPOSITE: ctx.fillStyle='#000000'; break;
+        case State.PRIME: ctx.fillStyle='#28a745'; break;
+      }
+      ctx.fillRect(x, padding, scaleX-1, H - 2*padding);
+    }
+    // walkers as purple dots near top
+    ctx.fillStyle='#6f42c1';
+    for(let i=0;i<W;i++){
+      const ws = cells[i].walkers;
+      if (ws.length){
+        const x = padding + i*scaleX + Math.floor((scaleX-1)/2);
+        for(let k=0;k<ws.length;k++){
+          const y = padding - 2 - (k*3 % (padding-2));
+          ctx.fillRect(x, y, 2, 2);
+        }
+      }
+    }
+    // numbers baseline (sparse)
+    ctx.fillStyle='#555';
+    ctx.font='10px ui-monospace, monospace';
+    for(let i=0;i<W;i+=Math.max(1, Math.floor(40/scaleX))){
+      const n = i+2;
+      const x = padding + i*scaleX;
+      ctx.fillText(String(n), x-4, H-4);
+    }
+  }
+
+  function spawnWalkerAt(i, period){
+    // place a walker with countdown = period at index i (cell i represents number i+2)
+    // We’ll store an object {p, c} where c counts down.
+    cells[i].walkers.push({p:period, c:period});
+  }
+
+  function step(){
+    // 1) Walkers act locally on their current cell: decrement countdown; if hits 0 and cell unknown → mark composite & reset c
+    for(let i=0;i<W;i++){
+      const cell = cells[i];
+      const keep = [];
+      for(const w of cell.walkers){
+        w.c -= 1;
+        if (w.c <= 0){
+          // If this cell is unknown (not yet prime), mark composite
+          if (cell.state === State.UNKNOWN){
+            cell.state = State.COMPOSITE;
+          }
+          w.c = w.p; // reset countdown
+        }
+        keep.push(w);
+      }
+      cell.walkers = keep;
+    }
+
+    // 2) Prime spawning: any UNKNOWN cell with no smaller-period composite mark encountered by walkers that *arrive* here now
+    // To make it local: we turn an UNKNOWN cell into PRIME the first time a walker *passes through* without having marked it composite.
+    // Implementation detail: we allow “promotion” when the cell has at least one walker and is still UNKNOWN → becomes PRIME and spawns its own walker.
+    for(let i=0;i<W;i++){
+      const cell = cells[i];
+      const n = i+2;
+      if (cell.state === State.UNKNOWN && cell.walkers.length>0){
+        cell.state = State.PRIME;
+        found += 1;
+        primeList.push(n);
+        if (found < goal){
+          // spawn a new walker with period = n at this cell
+          spawnWalkerAt(i, n);
+        }
+      }
+    }
+
+    // 3) Move walkers one step to the right (purely local shift)
+    const nextWalkers = Array.from({length:W}, ()=>[]);
+    for(let i=0;i<W;i++){
+      const ws = cells[i].walkers;
+      const j = i+1;
+      if (j < W){
+        for(const w of ws){
+          nextWalkers[j].push(w);
+        }
+      }
+    }
+    for(let i=0;i<W;i++){
+      cells[i].walkers = nextWalkers[i];
+    }
+
+    // 4) Boundary: at index 0 (number 2), ensure we always have at least one seed walker with p=2
+    if (!cells[0].walkers.length){
+      spawnWalkerAt(0, 2);
+    }
+  }
+
+  function animate(){
+    if (!running) return;
+    for(let k=0;k<8;k++){ // speed
+      if (found >= goal) { running=false; break; }
+      step();
+    }
+    draw();
+    pCount.textContent = String(found);
+    pList.textContent = primeList.join(', ');
+    if (running) rafId = requestAnimationFrame(animate);
+  }
+
+  function init(){
+    goal = Math.max(1, Math.min(200, +nInput.value|0));
+    W = Math.max(goal*10, Math.min(+widthInput.value|0, 2000)); // heuristic space
+    scaleX = Math.max(1, Math.floor((cvs.width - 2*padding)/W));
+    if (scaleX < 1){ scaleX = 1; }
+    makeCells();
+    found = 0; primeList = [];
+    pGoal.textContent = String(goal);
+    // seed with initial walker for 2 at position 0
+    spawnWalkerAt(0, 2);
+    draw();
+    pCount.textContent = '0';
+    pList.textContent = '';
+  }
+
+  initBtn.addEventListener('click', ()=>{ running=false; cancelAnimationFrame(rafId); init(); });
+  runBtn.addEventListener('click', ()=>{ running = !running; if (running) animate(); else cancelAnimationFrame(rafId); });
+
+  // boot
+  init();
+})();
+</script>
+</body>
+</html>
